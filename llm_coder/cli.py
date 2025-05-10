@@ -117,13 +117,13 @@ async def run_agent_from_cli(args):
     prompt = args.prompt
     if not prompt:  # プロンプトが引数で指定されなかった場合
         if sys.stdin.isatty():  # 標準入力がTTY（対話的）の場合のみメッセージ表示
-            print("プロンプトを標準入力から読み込みます (Ctrl+D で終了):")
+            logger.info("プロンプトを標準入力から読み込みます (Ctrl+D で終了):")
         lines = []
         try:
             for line in sys.stdin:
                 lines.append(line.rstrip("\n"))
         except KeyboardInterrupt:
-            print("\n入力が中断されました。")
+            logger.warning("入力が中断されました。")
             return
         prompt = "\n".join(lines)
         if not prompt.strip():
@@ -160,8 +160,8 @@ async def run_agent_from_cli(args):
 
     logger.info("Starting agent run from CLI", prompt_length=len(prompt))
     result = await agent_instance.run(prompt)  # agent_instance を使用
-    print("\n===== 実行結果 =====\n")
-    print(result)
+    logger.info("===== 実行結果 =====")
+    logger.info(result)  # result が複数行の場合もそのままログに出力
     logger.info("Agent run completed from CLI")
 
 

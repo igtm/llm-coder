@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional, Literal
 from datetime import datetime
 import fnmatch
 import difflib
+import structlog  # structlog をインポート
 
 # Third-party imports (you may need to install these)
 try:
@@ -15,6 +16,9 @@ try:
 except ImportError:
     print("Error: pydantic package required. Install with 'pip install pydantic'")
     sys.exit(1)
+
+# structlog の基本的な設定
+logger = structlog.get_logger(__name__)
 
 
 # Schema definitions
@@ -109,9 +113,8 @@ def initialize_filesystem_settings(directories: List[str]) -> None:
     global allowed_directories
 
     if not directories:
-        print(
-            "警告: 許可されたディレクトリが指定されていません。ファイルシステム操作は制限されます。",
-            file=sys.stderr,
+        logger.warning(
+            "許可されたディレクトリが指定されていません。ファイルシステム操作は制限されます。"
         )
         allowed_directories = []
         return
@@ -123,25 +126,27 @@ def initialize_filesystem_settings(directories: List[str]) -> None:
         norm_dir = normalize_path(abs_dir)
 
         if not os.path.exists(norm_dir):
-            print(
-                f"警告: ディレクトリ '{dir_path}' (解決後: {norm_dir}) が存在しません。",
-                file=sys.stderr,
+            logger.warning(
+                "ディレクトリが存在しません。",
+                path=dir_path,
+                resolved_path=norm_dir,
             )
             continue
 
         if not os.path.isdir(norm_dir):
-            print(
-                f"警告: パス '{dir_path}' (解決後: {norm_dir}) はディレクトリではありません。",
-                file=sys.stderr,
+            logger.warning(
+                "パスはディレクトリではありません。",
+                path=dir_path,
+                resolved_path=norm_dir,
             )
             continue
 
         valid_directories.append(norm_dir)
 
     allowed_directories = valid_directories
-    print(
-        f"ファイルシステム設定完了。許可ディレクトリ: {allowed_directories}",
-        file=sys.stderr,
+    logger.info(
+        "ファイルシステム設定完了。",
+        allowed_directories=allowed_directories,
     )
 
 
