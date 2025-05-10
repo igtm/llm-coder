@@ -13,8 +13,6 @@ from llm_coder.shell_command import (
 )  # get_shell_command_tools をインポート
 import structlog  # structlog をインポート (agent.py と同様の設定を想定)
 
-# structlog の基本的な設定 (agent.py と同様に設定するか、共通の設定モジュールを作るのが望ましい)
-# ここでは簡易的に設定
 logger = structlog.get_logger("llm_coder.cli")
 
 
@@ -111,6 +109,16 @@ def parse_args():
         f" (デフォルト: {allowed_dirs_default if allowed_dirs_default != [os.getcwd()] else '現在の作業ディレクトリ'})",
     )
 
+    repository_description_prompt_default = config_values.get(
+        "repository_description_prompt", ""
+    )
+    parser.add_argument(
+        "--repository-description-prompt",
+        type=str,
+        default=repository_description_prompt_default,
+        help="LLMに渡すリポジトリの説明プロンプト (デフォルト: TOMLファイルまたは空)",
+    )
+
     # remaining_argv を使って、--config 以外の引数を解析
     return parser.parse_args(remaining_argv)
 
@@ -167,6 +175,7 @@ async def run_agent_from_cli(args):
         temperature=args.temperature,
         max_iterations=args.max_iterations,
         available_tools=all_available_tools,  # 更新されたツールリストを使用
+        repository_description_prompt=args.repository_description_prompt,  # リポジトリ説明プロンプトを渡す
     )
 
     logger.info("Starting agent run from CLI", prompt_length=len(prompt))

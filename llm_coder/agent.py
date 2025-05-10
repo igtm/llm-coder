@@ -17,7 +17,11 @@ logger = structlog.get_logger("llm_coder.agent")
 
 
 # デフォルトプロンプト定数
-COMPLETION_CHECK_PROMPT = "タスクは完了しましたか？まだ必要な操作がある場合は、ツールを呼び出して続行してください。"
+COMPLETION_CHECK_PROMPT = (
+    "タスクは完了しましたか？\n"
+    "もし完了していれば、返答に必ず「TASK_COMPLETE」という文字列を含めてください。\n"
+    "まだ必要な操作がある場合は、ツールを呼び出して続行してください。"
+)
 FINAL_SUMMARY_PROMPT = (
     "タスクが完了しました。実行した内容の要約と結果を教えてください。"
 )
@@ -77,12 +81,15 @@ class Agent:
             Dict[str, Any]
         ] = None,  # ツールリストをコンストラクタで受け取る
         final_summary_prompt: str = FINAL_SUMMARY_PROMPT,  # 最終要約用プロンプト
+        repository_description_prompt: str = None,  # リポジトリ説明プロンプト
     ):
         self.model = model
         self.temperature = temperature
         self.max_iterations = max_iterations
         self.conversation_history: List[Message] = []
         self.final_summary_prompt = final_summary_prompt
+        # repository_description_prompt が None または空文字列の場合はそのまま None または空文字列を保持
+        self.repository_description_prompt = repository_description_prompt
 
         # 利用可能なツールを設定
         self.available_tools = available_tools or []
@@ -99,6 +106,9 @@ class Agent:
             temperature=self.temperature,
             max_iterations=self.max_iterations,
             tool_count=len(self.available_tools),
+            repository_description_length=len(self.repository_description_prompt)
+            if self.repository_description_prompt
+            else 0,
         )
 
     async def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> str:
@@ -147,7 +157,16 @@ class Agent:
         self.conversation_history = []
         logger.debug("Conversation history initialized")
 
+        # リポジトリ説明をシステムプロンプトに含める (存在する場合のみ)
+        repo_context_message = ""
+        if (
+            self.repository_description_prompt
+            and self.repository_description_prompt.strip()
+        ):
+            repo_context_message = f"作業対象のリポジトリに関する背景情報:\n---\n{self.repository_description_prompt.strip()}\n---\n\n"
+
         system_message_content = (
+            f"{repo_context_message}"  # repo_context_message が空なら何も追加されない
             "あなたは自律型のコーディングエージェントです。提示されたタスクを解決するために"
             "ファイルシステム上のコードを読み込み、編集し、必要なら新規作成します。\n"
             "タスクを次のステップで実行してください：\n"
@@ -267,7 +286,7 @@ class Agent:
                     history_length=len(self.conversation_history),
                 )
 
-                if not check_message_data.get("tool_calls") and "完了" in (
+                if not check_message_data.get("tool_calls") and "TASK_COMPLETE" in (
                     check_message_data.get("content") or ""
                 ):
                     logger.info("Task confirmed complete by LLM")
@@ -359,10 +378,7 @@ class Agent:
             if (
                 not new_message_data.get("tool_calls")
                 and new_message_data.get("content")
-                and (
-                    "完了" in new_message_data.get("content")
-                    or "成功" in new_message_data.get("content")
-                )
+                and ("TASK_COMPLETE" in new_message_data.get("content"))
             ):
                 logger.info("Task completed successfully based on LLM response")
                 return True

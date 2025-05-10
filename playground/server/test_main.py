@@ -10,7 +10,7 @@ def test_read_root():
     """
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == "Hello Japan"
+    assert response.json() == "Hello USA"
 
 
 def test_read_item():

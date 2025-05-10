@@ -22,13 +22,26 @@ allowed_dirs = [
     # "/tmp/llm_coder_output" # 必要に応じて他のディレクトリを追加
 ]
 
-# 今後追加される可能性のある設定:
-# log_level = "INFO" # "DEBUG", "INFO", "WARNING", "ERROR"
-# execute_tests = true # 生成されたコードのテストを自動実行するかどうか
+# リポジトリの説明プロンプト (エージェントにリポジトリのコンテキストを理解させるために使用)
+repository_description_prompt = """
+## server ディレクトリ (Python FastAPIプロジェクト)
 
-# ディレクトリ固有の設定 (README.md の例を参照)
-# [directories.python_project]
-# path = "src/python_project"
-# lint_command = "pylint --disable=C0114,C0115,C0116,W0511"
-# format_command = "black"
-# test_command = "pytest"
+### コマンド
+- **Lint:** `uv run ruff check .`
+- **Format:** `uv run ruff format .`
+- **Test:** `uv run pytest`
+
+## front ディレクトリ (TypeScript React Viteプロジェクト)
+
+### セットアップ
+プロジェクトのルートディレクトリ (front) で以下のコマンドを実行して、依存関係をインストールします。
+```bash
+yarn install
+```
+
+### コマンド (package.json の scripts を参照)
+- **Lint:** `yarn lint` (内部的に `eslint .` を実行)
+- **Format:** `yarn lint -- --fix` (eslint を使って修正) または別途 Prettier などを導入している場合はそのコマンド (`npx prettier --write .` など)
+- **Test:** `yarn test` (内部的に `vitest` を実行)
+
+"""
