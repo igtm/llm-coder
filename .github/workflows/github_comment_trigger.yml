@@ -87,7 +87,7 @@ jobs:
       - name: Setup LLM Coder from source
         run: |
           mkdir -p /tmp/llm-coder
-          git clone https://github.com/igtm/llm-coder.git /tmp/llm-coder
+          git clone https://github.com/igtm/llm_coder.git /tmp/llm-coder
           cd /tmp/llm-coder
           python -m pip install --upgrade pip
           pip install --editable .
