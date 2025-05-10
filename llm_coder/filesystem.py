@@ -401,9 +401,12 @@ async def execute_read_file(arguments: Dict[str, Any]) -> str:
     args = ReadFileArgs.model_validate(arguments)
     valid_path = await validate_path(args.path)
 
-    async with asyncio.to_thread(open, valid_path, "r", encoding="utf-8") as f:
+    f = await asyncio.to_thread(open, valid_path, "r", encoding="utf-8")
+    try:
         content = await asyncio.to_thread(f.read)
-    return content
+        return content
+    finally:
+        await asyncio.to_thread(f.close)
 
 
 async def execute_write_file(arguments: Dict[str, Any]) -> str:
@@ -411,9 +414,12 @@ async def execute_write_file(arguments: Dict[str, Any]) -> str:
     args = WriteFileArgs.model_validate(arguments)
     valid_path = await validate_path(args.path)
 
-    async with asyncio.to_thread(open, valid_path, "w", encoding="utf-8") as f:
+    f = await asyncio.to_thread(open, valid_path, "w", encoding="utf-8")
+    try:
         await asyncio.to_thread(f.write, args.content)
-    return f"ファイル '{args.path}' への書き込みに成功しました。"
+        return f"ファイル '{args.path}' への書き込みに成功しました。"
+    finally:
+        await asyncio.to_thread(f.close)
 
 
 async def execute_edit_file(arguments: Dict[str, Any]) -> str:

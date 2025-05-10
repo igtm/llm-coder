@@ -16,36 +16,29 @@ logger = structlog.get_logger("llm_coder.cli")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LLM Coder CLI")
-    # Add subparsers for different commands
-    subparsers = parser.add_subparsers(
-        dest="command", help="Command to run", required=True
-    )  # command を必須に
-
-    # Agent command
-    agent_parser = subparsers.add_parser("agent", help="Run the LLM coding agent")
-    agent_parser.add_argument(
+    # agent コマンドの引数を直接パーサーに追加
+    parser.add_argument(
         "prompt", type=str, nargs="?", help="実行するプロンプト (省略時は標準入力から)"
     )  # prompt を位置引数に変更、nargs='?' で省略可能に
-    agent_parser.add_argument(
+    parser.add_argument(
         "--model",
         "-m",
         type=str,
         default="gpt-4.1-nano",
         help="使用するLLMモデル",
     )
-    agent_parser.add_argument(
+    parser.add_argument(
         "--temperature", "-t", type=float, default=0.2, help="LLMの温度パラメータ"
     )
-    agent_parser.add_argument(
+    parser.add_argument(
         "--max-iterations", "-i", type=int, default=10, help="最大実行イテレーション数"
     )
-    agent_parser.add_argument(
+    parser.add_argument(
         "--allowed-dirs",
         nargs="+",
         help="ファイルシステム操作を許可するディレクトリ（スペース区切りで複数指定可）",
         default=[os.getcwd()],  # デフォルトは現在の作業ディレクトリ
     )
-    # Filesystem server command is removed
 
     return parser.parse_args()
 
@@ -107,26 +100,8 @@ def run_cli():
     """Entry point for the CLI script."""
     args = parse_args()
 
-    if args.command == "agent":
-        asyncio.run(run_agent_from_cli(args))  # 新しい非同期関数を呼び出し
-    # Filesystem command handling is removed
-    else:
-        # Default behavior if no command is specified or for other commands
-        # For now, if no command (or an unknown one) is given,
-        # we can show help or run the default main.
-        # If only 'agent' is supported, we might want to make it default or error.
-        # For this change, we assume 'agent' is the primary command.
-        # If args.command is None (no subcommand given), print help.
-        # `required=True` にしたので、command が None になることはない
-        # if args.command is None:
-        #     parse_args().print_help()
-        # else:
-        # Fallback for any other case, though currently only 'agent' is defined.
-        # asyncio.run(default_main()) # default_main を呼び出し
-        # 不明なコマンドの場合はヘルプを表示
-        logger.error(f"不明なコマンド: {args.command}")
-        parse_args().print_help()
-        sys.exit(1)
+    # agent サブコマンドがなくなったため、直接エージェント実行ロジックを呼び出す
+    asyncio.run(run_agent_from_cli(args))
 
 
 if __name__ == "__main__":

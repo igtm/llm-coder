@@ -24,34 +24,37 @@ llm api のインターフェースは litellm ライブラリを使用。Claude
 
 ### 開発中の直接実行
 
-インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意しているので、そのディレクトリから以下のコマンドを実行してください:
+インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意していますが、スクリプトの実行はプロジェクトのルートディレクトリから行う必要があります。
+
+プロジェクトのルートディレクトリ (`llm_coder` ディレクトリのトップ) から以下のコマンドを実行してください:
 
 ```bash
-# playground ディレクトリに移動
-cd playground
-# 1階層上の llm_coder ディレクトリ内の cli.py を実行
-uv run python ../llm_coder/cli.py <引数...>
+# プロジェクトのルートディレクトリにいることを確認
+# (例: /home/igtm/tmp/llm_coder)
+uv run python -m llm_coder.cli <引数...>
 ```
 
 例:
 
 ```bash
-# playground ディレクトリにいることを想定
-uv run python ../llm_coder/cli.py --prompt "Create a python script that outputs 'hello world'"
+# プロジェクトのルートディレクトリにいることを想定
+uv run python -m llm_coder.cli "Create a python script that outputs 'hello world'"
 ```
+
+`playground` ディレクトリは、生成されたコードやテストファイルなどを配置する作業スペースとして利用できます。
 
 ## 使い方
 
 インストール後、以下のコマンドで CLI ツールを実行できます:
 
 ```bash
-llm-coder
+llm-coder <プロンプト> [オプション...]
 ```
 
 # Parameter
 
 ```sh
-llm_coder --model claude-3-opus-20240229 --prompt "Create a python script that outputs 'hello world'"
+llm_coder --model claude-3-opus-20240229 "Create a python script that outputs 'hello world'"
 ```
 
 # Configuration

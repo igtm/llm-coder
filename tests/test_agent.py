@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from unittest.mock import patch, AsyncMock
 import json
 import sys
@@ -8,7 +7,7 @@ from typing import Dict, Any, List
 
 # テスト対象のモジュールをインポート
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from llm_coder.agent import Agent, Message
+from llm_coder.agent import Agent
 
 
 # モック用のレスポンスクラス群
