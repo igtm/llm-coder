@@ -8,6 +8,9 @@ import toml  # toml をインポート
 # agent と filesystem モジュールをインポート
 from llm_coder.agent import Agent
 from llm_coder.filesystem import initialize_filesystem_settings, get_filesystem_tools
+from llm_coder.shell_command import (
+    get_shell_command_tools,
+)  # get_shell_command_tools をインポート
 import structlog  # structlog をインポート (agent.py と同様の設定を想定)
 
 # structlog の基本的な設定 (agent.py と同様に設定するか、共通の設定モジュールを作るのが望ましい)
@@ -150,12 +153,20 @@ async def run_agent_from_cli(args):
     filesystem_tools = get_filesystem_tools()
     logger.debug("Retrieved filesystem tools", tool_count=len(filesystem_tools))
 
+    # シェルコマンドツールを取得
+    shell_tools = get_shell_command_tools()
+    logger.debug("Retrieved shell command tools", tool_count=len(shell_tools))
+
+    # 利用可能な全ツールを結合
+    all_available_tools = filesystem_tools + shell_tools
+    logger.debug("Total available tools", tool_count=len(all_available_tools))
+
     logger.debug("Initializing agent from CLI")
     agent_instance = Agent(  # Agent クラスのインスタンス名変更
         model=args.model,
         temperature=args.temperature,
         max_iterations=args.max_iterations,
-        available_tools=filesystem_tools,
+        available_tools=all_available_tools,  # 更新されたツールリストを使用
     )
 
     logger.info("Starting agent run from CLI", prompt_length=len(prompt))

@@ -22,26 +22,6 @@ llm api のインターフェースは litellm ライブラリを使用。Claude
 
    これにより、プロジェクトディレクトリ内で `llm-coder` コマンドが利用可能になります。
 
-### 開発中の直接実行
-
-インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意していますが、スクリプトの実行はプロジェクトのルートディレクトリから行う必要があります。
-
-プロジェクトのルートディレクトリ (`llm_coder` ディレクトリのトップ) から以下のコマンドを実行してください:
-
-```bash
-# プロジェクトのルートディレクトリにいることを確認
-# (例: /home/igtm/tmp/llm_coder)
-uv run python -m llm_coder.cli <引数...>
-```
-
-例:
-
-```bash
-# プロジェクトのルートディレクトリにいることを想定
-uv run python -m llm_coder.cli "Create a python script that outputs 'hello world'"
-```
-
-`playground` ディレクトリは、生成されたコードやテストファイルなどを配置する作業スペースとして利用できます。
 
 ## 使い方
 
@@ -100,3 +80,26 @@ llm_coder --config config.toml
 ```
 
 The tool will apply the appropriate lint/format/test commands based on the directory path of the generated code. Directory-specific configurations override global settings.
+
+
+
+### 開発中の直接実行
+
+インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意していますが、スクリプトの実行はプロジェクトのルートディレクトリから行う必要があります。
+
+プロジェクトのルートディレクトリ (`llm_coder` ディレクトリのトップ) から以下のコマンドを実行してください:
+
+```bash
+# プロジェクトのルートディレクトリにいることを確認
+# (例: /home/igtm/tmp/llm_coder)
+uv run python -m llm_coder.cli <引数...>
+```
+
+例:
+
+```bash
+# プロジェクトのルートディレクトリにいることを想定
+uv run python -m llm_coder.cli "Create a python script that outputs 'hello world'"
+```
+
+`playground` ディレクトリは、生成されたコードやテストファイルなどを配置する作業スペースとして利用できます。

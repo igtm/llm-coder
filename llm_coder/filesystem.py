@@ -105,10 +105,10 @@ def expand_home(filepath: str) -> str:
 
 
 # Global variables
-allowed_directories = []
+allowed_directories: list[str] = []
 
 
-def initialize_filesystem_settings(directories: List[str]) -> None:
+def initialize_filesystem_settings(directories: list[str]) -> None:
     """ファイルシステム操作が許可されるディレクトリを設定します。"""
     global allowed_directories
 
