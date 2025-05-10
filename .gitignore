@@ -12,3 +12,4 @@ wheels/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+llm_coder_config.toml

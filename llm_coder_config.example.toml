@@ -1,0 +1,47 @@
+# llm_coder の設定ファイルサンプル
+
+# 実行するプロンプト (省略可能。コマンドライン引数や標準入力で指定できます)
+# prompt = "ここにデフォルトのプロンプトを記述します"
+
+# 使用するLLMモデル
+model = "gpt-4.1-nano" # 例: "gpt-4-turbo", "gemini-pro"
+
+# LLMの温度パラメータ (0.0 から 2.0 の間。高いほど創造的、低いほど決定論的)
+temperature = 0.5
+
+# 最大実行イテレーション数 (エージェントが試行する最大回数)
+max_iterations = 10
+
+# ファイルシステム操作を許可するディレクトリのリスト
+# デフォルトでは、CLIを実行したカレントワーキングディレクトリが許可されます。
+# ここで指定すると、その設定がCLIのデフォルトよりも優先されます。
+# コマンドラインで --allowed-dirs を指定すると、この設定は上書きされます。
+allowed_dirs = [
+    ".",          # カレントディレクトリを許可
+    "playground", # playground ディレクトリを許可 (存在する場合)
+    # "/tmp/llm_coder_output" # 必要に応じて他のディレクトリを追加
+]
+
+# リポジトリの説明プロンプト (エージェントにリポジトリのコンテキストを理解させるために使用)
+repository_description_prompt = """
+## server ディレクトリ (Python FastAPIプロジェクト)
+
+### コマンド
+- **Lint:** `uv run ruff check .`
+- **Format:** `uv run ruff format .`
+- **Test:** `uv run pytest`
+
+## front ディレクトリ (TypeScript React Viteプロジェクト)
+
+### セットアップ
+プロジェクトのルートディレクトリ (front) で以下のコマンドを実行して、依存関係をインストールします。
+```bash
+yarn install
+```
+
+### コマンド (package.json の scripts を参照)
+- **Lint:** `yarn lint` (内部的に `eslint .` を実行)
+- **Format:** `yarn lint -- --fix` (eslint を使って修正) または別途 Prettier などを導入している場合はそのコマンド (`npx prettier --write .` など)
+- **Test:** `yarn test` (内部的に `vitest` を実行)
+
+"""
