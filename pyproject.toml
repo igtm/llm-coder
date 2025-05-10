@@ -8,6 +8,7 @@ dependencies = [
     "litellm>=1.68.2",
     "pydantic>=2.11.4",
     "structlog>=25.3.0",
+    "toml>=0.10.2",
 ]
 
 [dependency-groups]

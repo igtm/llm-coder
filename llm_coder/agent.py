@@ -76,14 +76,12 @@ class Agent:
         available_tools: List[
             Dict[str, Any]
         ] = None,  # ツールリストをコンストラクタで受け取る
-        completion_check_prompt: str = COMPLETION_CHECK_PROMPT,  # 完了確認用プロンプト
         final_summary_prompt: str = FINAL_SUMMARY_PROMPT,  # 最終要約用プロンプト
     ):
         self.model = model
         self.temperature = temperature
         self.max_iterations = max_iterations
         self.conversation_history: List[Message] = []
-        self.completion_check_prompt = completion_check_prompt
         self.final_summary_prompt = final_summary_prompt
 
         # 利用可能なツールを設定
@@ -231,12 +229,12 @@ class Agent:
                 )
 
                 completion_check_message = Message(
-                    role="user", content=self.completion_check_prompt
+                    role="user", content=COMPLETION_CHECK_PROMPT
                 )
                 self.conversation_history.append(completion_check_message)
                 logger.debug(
                     "Sent completion check to LLM",
-                    prompt=self.completion_check_prompt,
+                    prompt=COMPLETION_CHECK_PROMPT,
                     history_length=len(self.conversation_history),
                 )
 
