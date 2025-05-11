@@ -7,7 +7,7 @@ name            = "llm_coder"
 version         = "0.1.0"
 description     = "llm による自立型 Cli コーディングエージェントライブラリ"
 readme          = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license         = { text = "MIT" }
 authors         = [{ name = "Tomokatsu Iguchi" }]
 

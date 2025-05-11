@@ -2,7 +2,7 @@
 
 import asyncio
 import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 import structlog
 
@@ -21,6 +21,10 @@ class ShellCommandArgs(BaseModel):
         ..., description="実行するシェルコマンド文字列", min_length=1
     )  # min_length=1 を追加
     timeout: int = Field(default=60, description="コマンドのタイムアウト秒数")
+    workspace: Optional[str] = Field(
+        default=None,
+        description="コマンドを実行するワークスペースディレクトリ。指定しない場合はカレントディレクトリ。",
+    )
 
 
 # ツール実行関数
@@ -35,13 +39,19 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
         return f"引数エラー: {str(e)}"
 
     logger.info(
-        "シェルコマンドを実行します", command=args.command, timeout=args.timeout
+        "シェルコマンドを実行します",
+        command=args.command,
+        timeout=args.timeout,
+        workspace=args.workspace or "カレントディレクトリ",
     )
 
     try:
         # asyncio.create_subprocess_shell を使用してコマンドを実行
         process = await asyncio.create_subprocess_shell(
-            args.command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            args.command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=args.workspace,  # ワークスペースを指定
         )
 
         # タイムアウト付きで待機
@@ -60,6 +70,7 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
             logger.warning(
                 "シェルコマンドがエラーで終了しました",
                 command=args.command,
+                workspace=args.workspace or "カレントディレクトリ",
                 return_code=process.returncode,
                 stdout=stdout.decode(errors="replace"),
                 stderr=stderr.decode(errors="replace"),
@@ -68,6 +79,7 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
             logger.info(
                 "シェルコマンドの実行に成功しました",
                 command=args.command,
+                workspace=args.workspace or "カレントディレクトリ",
                 return_code=process.returncode,
             )
 
@@ -78,6 +90,7 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
             "シェルコマンドがタイムアウトしました",
             command=args.command,
             timeout=args.timeout,
+            workspace=args.workspace or "カレントディレクトリ",
         )
         # タイムアウトした場合、プロセスを強制終了しようと試みる
         if process and process.returncode is None:
@@ -94,14 +107,18 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
         return f"コマンド '{args.command}' がタイムアウトしました ({args.timeout}秒)。"
     except FileNotFoundError:
         logger.error(
-            "シェルコマンドの実行に失敗しました: コマンドが見つかりません",
+            "シェルコマンドの実行に失敗しました: コマンドまたはワークスペースが見つかりません",
             command=args.command,
+            workspace=args.workspace,
         )
+        if args.workspace:
+            return f"コマンド '{args.command}' の実行に失敗しました。コマンドまたはワークスペース '{args.workspace}' が見つかりません。パスを確認してください。"
         return f"コマンド '{args.command}' が見つかりません。パスを確認してください。"
     except Exception as e:
         logger.error(
             "シェルコマンドの実行中に予期せぬエラーが発生しました",
             command=args.command,
+            workspace=args.workspace or "カレントディレクトリ",
             error=str(e),
         )
         return f"コマンド '{args.command}' の実行中にエラーが発生しました: {str(e)}"
@@ -126,6 +143,10 @@ def get_shell_command_tools() -> List[Dict[str, Any]]:
                             "type": "integer",
                             "description": "コマンドがタイムアウトするまでの秒数。デフォルトは60秒。",
                             "default": 60,
+                        },
+                        "workspace": {
+                            "type": "string",
+                            "description": "コマンドを実行するワークスペースディレクトリ。指定しない場合はllm_coderのカレントディレクトリで実行されます。",
                         },
                     },
                     "required": ["command"],
