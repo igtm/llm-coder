@@ -309,7 +309,7 @@ jobs:
               console.error("Error generating comment description:", error);
             }
 
-            let commentBody = `🤖 LLM Coder applied the following changes based on your request:\n\n${generatedDescription}\n\n---\n*Changes pushed to branch \`${branchName}\`.*`;
+            let commentBody = `🤖 LLM Coder applied the following changes based on your request:\n\n${generatedDescription}`;
 
             // PRのdiffコメントの場合は、そのスレッドに返信
             if (context.eventName === 'pull_request_review_comment') {
