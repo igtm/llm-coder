@@ -7,6 +7,8 @@ import structlog
 
 try:
     import litellm
+    # ストリーミングチャンクの繰り返し制限を設定
+    litellm.REPEATED_STREAMING_CHUNK_LIMIT = 30
 except ImportError:
     print("Error: litellm package required. Install with 'pip install litellm'")
     sys.exit(1)
