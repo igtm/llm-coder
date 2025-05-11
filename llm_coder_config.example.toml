@@ -27,21 +27,11 @@ repository_description_prompt = """
 ## server ディレクトリ (Python FastAPIプロジェクト)
 
 ### コマンド
-- **Lint:** `uv run ruff check .`
-- **Format:** `uv run ruff format .`
-- **Test:** `uv run pytest`
+- **CI (Lint, Format, Testを一括実行):** `uv run poe ci`
 
 ## front ディレクトリ (TypeScript React Viteプロジェクト)
 
-### セットアップ
-プロジェクトのルートディレクトリ (front) で以下のコマンドを実行して、依存関係をインストールします。
-```bash
-yarn install
-```
-
 ### コマンド (package.json の scripts を参照)
-- **Lint:** `yarn lint` (内部的に `eslint .` を実行)
-- **Format:** `yarn lint -- --fix` (eslint を使って修正) または別途 Prettier などを導入している場合はそのコマンド (`npx prettier --write .` など)
-- **Test:** `yarn test` (内部的に `vitest` を実行)
+- **CI (Install, Lint, Test, Buildを一括実行):** `yarn ci`
 
 """
