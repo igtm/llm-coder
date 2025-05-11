@@ -154,6 +154,15 @@ jobs:
             core.exportVariable('PROBLEM_STATEMENT', problemStatement);
       - name: Create llm_coder_config.toml
         run: cp llm_coder_config.example.toml llm_coder_config.toml
+      - name: Install Ruff and UV
+        run: |
+          # Install ruff
+          curl -LsSf https://astral.sh/ruff/install.sh | sh
+          # Install uv
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          # Add ruff and uv to PATH
+          echo "$HOME/.ruff/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH # uv is installed to .cargo/bin by default
       - name: Run LLM Coder
         run: |
           # Escape newlines and quotes in problem statement
