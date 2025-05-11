@@ -208,9 +208,8 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
-          GITHUB_TOKEN: ${{ github.token }}
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GH_PAT }}
           script: |
             const { repo, owner } = context.repo;
             const issueUrl = context.payload.issue?.html_url;
