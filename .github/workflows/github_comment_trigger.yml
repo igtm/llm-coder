@@ -173,19 +173,12 @@ jobs:
           # result.txt ファイルが正常に作成されたか確認する
           if [ -f result.txt ]; then
             echo "Result file created successfully."
-            # result.txt の内容を読み込み、GITHUB_OUTPUT に設定する
-            # GitHub Actionsの公式方法でデリミタを使用
-            delimiter="EOF_$(date +%s)"
-            echo "result_content<<$delimiter" >> $GITHUB_ENV
-            cat result.txt >> $GITHUB_ENV
-            echo "$delimiter" >> $GITHUB_ENV
-            
-            # 同様の方法でGITHUB_OUTPUTにも保存（別のデリミタを使用）
-            output_delimiter="OUTPUT_$(date +%s)"
-            echo "result_content<<$output_delimiter" >> $GITHUB_OUTPUT
+            # 標準的な固定デリミタを使用してマルチライン出力を処理
+            echo 'result_content<<EOF' >> $GITHUB_OUTPUT
             cat result.txt >> $GITHUB_OUTPUT
-            echo "$output_delimiter" >> $GITHUB_OUTPUT
+            echo 'EOF' >> $GITHUB_OUTPUT
             
+            # 環境変数は使わずに出力だけに保存する
             rm result.txt
           else
             echo "Failed to create result file."
