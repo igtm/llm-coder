@@ -173,8 +173,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           AWS_REGION_NAME: us-west-2
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
-      - name: Install OpenAI Package
-        run: npm install -g openai @azure/openai
       - name: Prepare Git and Push Changes
         id: git_changes
         run: |
@@ -209,6 +207,13 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - name: Install OpenAI Package
+        run: |
+          # 一時ディレクトリを作成してnpmパッケージをインストール
+          mkdir -p /tmp/npm_packages
+          npm install --prefix /tmp/npm_packages openai @azure/openai
+          # 後続のステップで使用するためにNODE_PATHをセット
+          echo "NODE_PATH=/tmp/npm_packages/node_modules" >> $GITHUB_ENV
       - name: Generate Commit Message and Commit
         if: env.SKIP_REMAINING != 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -216,6 +221,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
           BRANCH_NAME: ${{ env.BRANCH_NAME }}
           LLM_COMMENT_LANGUAGE: ${{ env.LLM_COMMENT_LANGUAGE || 'English' }}
+          NODE_PATH: /tmp/npm_packages/node_modules
         with:
           github-token: ${{ github.token }}
           script: |
@@ -262,6 +268,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+          NODE_PATH: /tmp/npm_packages/node_modules
         with:
           github-token: ${{ secrets.GH_PAT }}
           script: |
@@ -322,6 +329,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+          NODE_PATH: /tmp/npm_packages/node_modules
         with:
           github-token: ${{ github.token }}
           script: |
