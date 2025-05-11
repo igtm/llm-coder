@@ -146,7 +146,7 @@ def get_shell_command_tools() -> List[Dict[str, Any]]:
                         },
                         "workspace": {
                             "type": "string",
-                            "description": "コマンドを実行するワークスペースディレクトリ。指定しない場合はllm_coderのカレントディレクトリで実行されます。",
+                            "description": "コマンドを実行するワークスペースディレクトリ。指定しない場合はカレントディレクトリで実行されます。",
                         },
                     },
                     "required": ["command"],
