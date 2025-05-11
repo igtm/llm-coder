@@ -214,6 +214,7 @@ jobs:
             const { repo, owner } = context.repo;
             const issueUrl = context.payload.issue?.html_url;
             const issueNumber = process.env.ISSUE_NUMBER;
+            const triggerCommentUrl = context.payload.comment.html_url; // Get trigger comment URL
 
             // Get issue title if available
             let issueTitle = "llm-coder";
