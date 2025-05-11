@@ -1,0 +1,52 @@
+name: Playground Front Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - playground/front/**
+      - .github/workflows/playground-front-test.yml
+
+concurrency:
+  # ref for branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playground-front-test:
+    name: Playground Front Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - name: Use Node.js
+        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 # v3.8.2
+        with:
+          node-version-file: playground/front/.nvmrc
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
+        id: front-cache
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+      - if: ${{ steps.front-cache.outputs.cache-hit != 'true' }}
+        run: yarn
+        working-directory: playground/front
+      - id: changed-files
+        uses: tj-actions/changed-files@af292f1e845a0377b596972698a8598734eb2796 # v40.0.0
+        with:
+          files: |
+            src/**/*.{ts,tsx}
+          path: playground/front
+      - name: lint
+        run: |
+          set +e
+          echo ${{ steps.changed-files.outputs.all_changed_files }}
+          yarn lint ${{ steps.changed-files.outputs.all_changed_files }}
+        working-directory: playground/front
+      - name: test
+        run: |
+          yarn build
+          yarn test
+        working-directory: playground/front
