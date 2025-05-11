@@ -12,6 +12,9 @@ permissions:
   pull-requests: write
   issues: write
 
+env: # グローバル環境変数を設定
+  LLM_COMMENT_LANGUAGE: "Japanese" # LLMがコメントするときの言語
+
 jobs:
   llm-coder:
     if: |
@@ -149,6 +152,8 @@ jobs:
             console.log('Event Name:', context.eventName);
             console.log('Is Pull Request:', isPullRequest);
             core.exportVariable('PROBLEM_STATEMENT', problemStatement);
+      - name: Create llm_coder_config.toml
+        run: cp llm_coder_config.example.toml llm_coder_config.toml
       - name: Run LLM Coder
         run: |
           # Escape newlines and quotes in problem statement
@@ -238,7 +243,7 @@ jobs:
             const { OpenAI } = require("openai");
             const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
             const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
-            const prompt = `Generate a concise Pull Request description based on the following git diff. Explain the main changes and their purpose. Format it nicely using Markdown.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
+            const prompt = `Generate a concise Pull Request description in ${process.env.LLM_COMMENT_LANGUAGE} based on the following git diff. Explain the main changes and their purpose. Format it nicely using Markdown.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
             let generatedDescription = 'Automated code changes by LLM Coder.';
             try {
               const completion = await client.chat.completions.create({
@@ -284,7 +289,7 @@ jobs:
             });
             const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
 
-            const prompt = `Generate a concise comment explaining the changes introduced by the following git commit diff. Format it nicely using Markdown.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
+            const prompt = `Generate a concise comment in ${process.env.LLM_COMMENT_LANGUAGE} explaining the changes introduced by the following git commit diff. Format it nicely using Markdown.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
             let generatedDescription = 'Applied automated code changes.';
             try {
               const completion = await client.chat.completions.create({
