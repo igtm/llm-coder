@@ -200,7 +200,7 @@ jobs:
             echo "SKIP_REMAINING=false" >> $GITHUB_ENV
             # Issue comment かつ PR でない場合は新しいブランチを作成
             if [ "${{ github.event_name }}" = "issue_comment" ] && [ -z "${{ github.event.issue.pull_request }}" ]; then
-              BRANCH_NAME="LLM-Coder-fix-#${{ env.ISSUE_NUMBER }}-$(echo $RANDOM | md5sum | cut -c1-8)"
+              BRANCH_NAME="LLM-Coder-fix-issue-${{ env.ISSUE_NUMBER }}-$(echo $RANDOM | md5sum | cut -c1-8)"
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
               git checkout -b "$BRANCH_NAME"
             else
@@ -209,15 +209,9 @@ jobs:
               PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
               BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-              
-              # 未コミットの変更をスタッシュに保存
-              git stash -u
-              
+              git fetch origin "$BRANCH_NAME"
               # ブランチのチェックアウトを試みる
               git checkout "$BRANCH_NAME"
-              
-              # スタッシュした変更を復元（存在する場合）
-              git stash list | grep -q "stash@{0}" && git stash pop || echo "スタッシュされた変更はありません"
             fi
 
             echo "Changes detected. Proceeding with commit and push."
