@@ -82,6 +82,7 @@ class Agent:
         ] = None,  # ツールリストをコンストラクタで受け取る
         final_summary_prompt: str = FINAL_SUMMARY_PROMPT,  # 最終要約用プロンプト
         repository_description_prompt: str = None,  # リポジトリ説明プロンプト
+        request_timeout: int = 60,  # 1回のリクエストに対するタイムアウト秒数（CLIから調整可能、デフォルト60）
     ):
         self.model = model
         self.temperature = temperature
@@ -103,6 +104,8 @@ class Agent:
         # トークン使用量を記録
         self.total_prompt_tokens = 0
         self.total_completion_tokens = 0
+
+        self.request_timeout = request_timeout
 
         logger.debug(
             "Agent initialized",
@@ -206,6 +209,7 @@ class Agent:
                 messages=[msg.to_dict() for msg in self.conversation_history],
                 temperature=self.temperature,
                 tools=self.tools,  # 更新されたツールリストを使用
+                timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
             )
             logger.debug(
                 "LLM response received for initial plan", response_id=response.id
@@ -283,6 +287,7 @@ class Agent:
                     messages=[msg.to_dict() for msg in self.conversation_history],
                     temperature=self.temperature,
                     tools=self.tools,  # 更新されたツールリストを使用
+                    timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
                 )
                 logger.debug(
                     "LLM response received for completion check",
@@ -385,6 +390,7 @@ class Agent:
                 messages=[msg.to_dict() for msg in self.conversation_history],
                 temperature=self.temperature,
                 tools=self.tools,  # 更新されたツールリストを使用
+                timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
             )
             logger.debug(
                 "LLM response received for next actions", response_id=response.id
@@ -467,6 +473,7 @@ class Agent:
                     model=self.model,
                     messages=[msg.to_dict() for msg in self.conversation_history],
                     temperature=self.temperature,
+                    timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
                 )
                 logger.debug(
                     "LLM response received for final summary",

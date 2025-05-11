@@ -55,6 +55,8 @@ options:
                         実行結果を出力するファイルパス (デフォルト: なし、標準出力のみ)
   --conversation-history CONVERSATION_HISTORY, -ch CONVERSATION_HISTORY
                         エージェントの会話履歴を出力するファイルパス (デフォルト: なし)
+  --request-timeout REQUEST_TIMEOUT
+                        LLM APIリクエスト1回あたりのタイムアウト秒数 (デフォルト: 60)
 ```
 
 ### 使用例
@@ -71,6 +73,9 @@ llm-coder --temperature 0.7 --max-iterations 5 "Create a python script that outp
 
 # 許可するディレクトリを指定
 llm-coder --allowed-dirs . ./output ./src "Create a python script that outputs 'hello world'"
+
+# リクエストタイムアウトを指定
+llm-coder --request-timeout 120 "Create a python script that outputs 'hello world'"
 
 # 実行結果をファイルに出力
 llm-coder --output result.txt "Create a python script that outputs 'hello world'"
@@ -98,6 +103,7 @@ model = "claude-3-opus-20240229"
 prompt = "Create a python script that outputs 'hello world'"
 temperature = 0.5
 max_iterations = 10
+request_timeout = 60
 allowed_dirs = ["."]
 repository_description_prompt = "このリポジトリはPythonのユーティリティツールです"
 # output = "result.txt"

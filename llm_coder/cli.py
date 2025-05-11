@@ -139,6 +139,15 @@ def parse_args():
         help="エージェントの会話履歴を出力するファイルパス (デフォルト: なし)",
     )
 
+    # LLM APIのリクエストタイムアウトオプションを追加
+    request_timeout_default = config_values.get("request_timeout", 60)
+    parser.add_argument(
+        "--request-timeout",
+        type=int,
+        default=request_timeout_default,
+        help=f"LLM APIリクエスト1回あたりのタイムアウト秒数 (デフォルト: {request_timeout_default})",
+    )
+
     # remaining_argv を使って、--config 以外の引数を解析
     return parser.parse_args(remaining_argv)
 
@@ -196,6 +205,7 @@ async def run_agent_from_cli(args):
         max_iterations=args.max_iterations,
         available_tools=all_available_tools,  # 更新されたツールリストを使用
         repository_description_prompt=args.repository_description_prompt,  # リポジトリ説明プロンプトを渡す
+        request_timeout=args.request_timeout,  # LLM APIリクエストのタイムアウトを渡す
     )
 
     logger.info("Starting agent run from CLI", prompt_length=len(prompt))
