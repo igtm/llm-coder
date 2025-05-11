@@ -173,14 +173,9 @@ jobs:
           # result.txt ファイルが正常に作成されたか確認する
           if [ -f result.txt ]; then
             echo "Result file created successfully."
-            # よりユニークな固定デリミタを使用してマルチライン出力を処理
-            LLM_CODER_DELIMITER="END_OF_LLM_CODER_OUTPUT_7345823"
-            echo "result_content<<${LLM_CODER_DELIMITER}" >> $GITHUB_OUTPUT
-            cat result.txt >> $GITHUB_OUTPUT
-            # デリミタが単独の行にあることを確認
-            echo "${LLM_CODER_DELIMITER}" >> $GITHUB_OUTPUT
-            
-            # 環境変数は使わずに出力だけに保存する
+            # 改行を \n に変換して1行で出力
+            result_content=$(sed ':a;N;$!ba;s/\n/\\n/g' result.txt)
+            echo "result_content=${result_content}" >> $GITHUB_OUTPUT
             rm result.txt
           else
             echo "Failed to create result file."
