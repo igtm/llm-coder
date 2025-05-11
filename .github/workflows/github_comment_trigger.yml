@@ -106,23 +106,23 @@ jobs:
               if (isPullRequest) {
                 // PRへのコメントの場合
                 const prNumber = context.payload.issue.number;
-                // PRの情報を取得
-                // const { data: pr } = await github.rest.pulls.get({
-                //   owner: context.repo.owner,
-                //   repo: context.repo.repo,
-                //   pull_number: prNumber
-                // });
 
                 // 変更ファイル一覧を取得
-                // const { data: files } = await github.rest.pulls.listFiles({
-                //   owner: context.repo.owner,
-                //   repo: context.repo.repo,
-                //   pull_number: prNumber
-                // });
+                const { data: files } = await github.rest.pulls.listFiles({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
                 
-                // const changedFiles = files.map(file => `- ${file.filename}`).join('\n');
+                const changedFiles = files.map(file => `- ${file.filename}`).join('\n');
                 
-                problemStatement = `この指示に従ってコード修正してください：${context.payload.comment.body.replace('/llm-coder', '')}`;
+                problemStatement = `
+                以下の指示に従ってコードを修正してください。
+                指示: ${context.payload.comment.body.replace('/llm-coder', '')}
+
+                このPull Requestで変更されたファイル一覧:
+                ${changedFiles}
+                `;
               } else {
                 // Issue へのコメントの場合
                 problemStatement = `
