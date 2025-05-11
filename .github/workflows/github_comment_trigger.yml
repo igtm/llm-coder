@@ -176,7 +176,7 @@ jobs:
           AWS_REGION_NAME: us-west-2
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
       - name: Install OpenAI Package
-        run: npm install openai @azure/openai
+        run: npm install -g openai @azure/openai
       - name: Prepare Git and Push Changes
         id: git_changes
         run: |
