@@ -196,8 +196,15 @@ jobs:
               PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
               BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-              git fetch origin "$BRANCH_NAME"
+              
+              # 未コミットの変更をスタッシュに保存
+              git stash -u
+              
+              # ブランチのチェックアウトを試みる
               git checkout "$BRANCH_NAME"
+              
+              # スタッシュした変更を復元（存在する場合）
+              git stash list | grep -q "stash@{0}" && git stash pop || echo "スタッシュされた変更はありません"
             fi
 
             echo "Changes detected. Proceeding with commit and push."
