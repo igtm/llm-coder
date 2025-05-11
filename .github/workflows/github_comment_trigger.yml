@@ -160,6 +160,8 @@ jobs:
           curl -LsSf https://astral.sh/ruff/install.sh | sh
           # Install uv
           curl -LsSf https://astral.sh/uv/install.sh | sh
+          # Install poethepoet
+          pipx install poethepoet
           # Add ruff and uv to PATH
           echo "$HOME/.ruff/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH # uv is installed to .cargo/bin by default
