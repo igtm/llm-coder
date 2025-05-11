@@ -97,6 +97,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install --editable .
           pip install boto3
+      - name: Prepare Working Branch
+        run: |
+          if [ "${{ env.ISSUE_TYPE }}" = "issue" ]; then
+            echo "ISSUE_TYPE is 'issue'. Creating a new branch."
+            NEW_BRANCH_NAME="LLM-Coder-fix-issue-${{ env.ISSUE_NUMBER }}-$(echo $RANDOM | md5sum | cut -c1-8)"
+            git checkout -b "$NEW_BRANCH_NAME"
+            echo "BRANCH_NAME=${NEW_BRANCH_NAME}" >> $GITHUB_ENV
+            echo "Created and checked out new branch: $NEW_BRANCH_NAME"
+          elif [ "${{ env.ISSUE_TYPE }}" = "pr" ]; then
+            echo "ISSUE_TYPE is 'pr'. Checking out feature branch."
+            PR_NUMBER=${{ env.ISSUE_NUMBER }}
+            PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
+            PR_BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
+            git fetch origin "$PR_BRANCH_NAME"
+            git checkout "$PR_BRANCH_NAME"
+            echo "BRANCH_NAME=${PR_BRANCH_NAME}" >> $GITHUB_ENV
+            echo "Fetched and checked out PR branch: $PR_BRANCH_NAME"
+          else
+            echo "Error: Unknown ISSUE_TYPE ('${{ env.ISSUE_TYPE }}'). Cannot prepare branch."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Generate Problem Statement
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
@@ -203,25 +226,8 @@ jobs:
           if ! git diff --staged --quiet; then
             echo "Changes detected. Proceeding with commit and push."
             echo "SKIP_REMAINING=false" >> $GITHUB_ENV
-            # Issue comment かつ PR でない場合は新しいブランチを作成
-            if [ "${{ github.event_name }}" = "issue_comment" ] && [ -z "${{ github.event.issue.pull_request }}" ]; then
-              echo "Creating a new branch for the changes."
-              BRANCH_NAME="LLM-Coder-fix-issue-${{ env.ISSUE_NUMBER }}-$(echo $RANDOM | md5sum | cut -c1-8)"
-              echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-              git checkout -b "$BRANCH_NAME"
-            else
-              # PR に対するコメントの場合は、その PR のブランチを使用
-              echo "Fetching the branch for the PR."
-              PR_NUMBER=${{ env.ISSUE_NUMBER }}
-              PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
-              BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
-              echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-              git fetch origin "$BRANCH_NAME"
-              # ブランチのチェックアウトを試みる
-              git checkout "$BRANCH_NAME"
-            fi
-
-            echo "Changes detected. Proceeding with commit and push."
+            # BRANCH_NAME は "Prepare Working Branch" ステップで設定されるため、ここでは何もしない
+            echo "Using branch: ${{ env.BRANCH_NAME }}"
           else
             echo "SKIP_REMAINING=true" >> $GITHUB_ENV
             echo "No changes to commit. LLM-Coder did not modify any files."
