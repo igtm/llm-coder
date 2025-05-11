@@ -25,23 +25,8 @@ jobs:
           python-version-file: "./playground/server/pyproject.toml"
       - name: Install uv
         run: pip install uv
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
-        with:
-          path: playground/server/.venv
-          key: server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
-          restore-keys: |
-            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
-            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-
       - name: Install dependencies with uv
         run: |
-          if [ ! -d ".venv" ]; then
-            uv venv .venv --python ${{ steps.setup-python.outputs.python-path }}
-            echo "Created .venv with uv"
-          else
-            echo ".venv already exists (likely from cache)"
-          fi
           uv pip sync uv.lock
         working-directory: playground/server
       - name: Run lint with uv
@@ -63,12 +48,6 @@ jobs:
         run: pip install uv
       - name: Install dependencies with uv
         run: |
-          if [ ! -d ".venv" ]; then
-            uv venv .venv --python ${{ steps.setup-python.outputs.python-path }}
-            echo "Created .venv with uv"
-          else
-            echo ".venv already exists (likely from cache)"
-          fi
           uv pip sync uv.lock
         working-directory: playground/server
       - name: Run tests for API
