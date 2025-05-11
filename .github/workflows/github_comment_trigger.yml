@@ -175,6 +175,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           AWS_REGION_NAME: us-west-2
           OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+      - name: Install OpenAI Package
+        run: npm install openai @azure/openai
       - name: Prepare Git and Push Changes
         id: git_changes
         run: |
@@ -202,19 +204,59 @@ jobs:
               git checkout "$BRANCH_NAME"
             fi
 
-            git commit -m "Fixed by LLM-Coder" -m "Closes #${{ env.ISSUE_NUMBER }}"
-            git push origin "$BRANCH_NAME"
+            echo "Changes detected. Proceeding with commit and push."
           else
             echo "SKIP_REMAINING=true" >> $GITHUB_ENV
             echo "No changes to commit. LLM-Coder did not modify any files."
           fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Install OpenAI Package
+      - name: Generate Commit Message and Commit
         if: env.SKIP_REMAINING != 'true'
-        run: npm install openai @azure/openai
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+          BRANCH_NAME: ${{ env.BRANCH_NAME }}
+          LLM_COMMENT_LANGUAGE: ${{ env.LLM_COMMENT_LANGUAGE || 'English' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { execSync } = require('child_process');
+            const { OpenAI } = require("openai");
+            const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
 
+            const diff = execSync('git diff --staged').toString();
+            let commitMessage = "Automated changes";
+
+            if (diff.trim() === "") {
+              console.log("No staged changes found. Skipping commit message generation.");
+            } else {
+              const prompt = `Generate a very concise, one-line commit message (less than 50 characters if possible, max 72) in ${process.env.LLM_COMMENT_LANGUAGE} for the following git diff. Do not include any prefixes like "feat:", "fix:", etc. Just the message itself.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
+              try {
+                const completion = await client.chat.completions.create({
+                  model: modelName,
+                  messages: [{ role: 'user', content: prompt }],
+                });
+                commitMessage = completion.choices[0].message.content.trim().split('\n')[0];
+              } catch (error) {
+                console.error("Error generating commit message:", error);
+                commitMessage = "Apply automated changes";
+              }
+            }
+
+            const finalCommitMessage = `${commitMessage} - Fixed by LLM-Coder`;
+            console.log(`Generated commit message: ${finalCommitMessage}`);
+
+            try {
+              execSync(`git commit -m "${finalCommitMessage.replace(/"/g, '\\"')}"`);
+              console.log("Commit successful.");
+              execSync(`git push origin ${process.env.BRANCH_NAME}`);
+              console.log(`Pushed changes to branch ${process.env.BRANCH_NAME}.`);
+            } catch (e) {
+              console.error("Error during git commit or push:", e.message);
+              core.setFailed(`Git commit or push failed: ${e.message}`);
+            }
       - name: Create Pull Request
         if: ${{ github.event_name == 'issue_comment' && !github.event.issue.pull_request && env.SKIP_REMAINING != 'true' }}
         continue-on-error: true
