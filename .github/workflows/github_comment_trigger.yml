@@ -174,12 +174,18 @@ jobs:
           if [ -f result.txt ]; then
             echo "Result file created successfully."
             # result.txt の内容を読み込み、GITHUB_OUTPUT に設定する
-            # 複数行の出力を扱うために、より信頼性の高い方法で GITHUB_OUTPUT に書き込む
-            {
-              echo "result_content<<LLMCODER_EOF"
-              cat result.txt
-              echo "LLMCODER_EOF"
-            } >> $GITHUB_OUTPUT
+            # GitHub Actionsの公式方法でデリミタを使用
+            delimiter="EOF_$(date +%s)"
+            echo "result_content<<$delimiter" >> $GITHUB_ENV
+            cat result.txt >> $GITHUB_ENV
+            echo "$delimiter" >> $GITHUB_ENV
+            
+            # 同様の方法でGITHUB_OUTPUTにも保存（別のデリミタを使用）
+            output_delimiter="OUTPUT_$(date +%s)"
+            echo "result_content<<$output_delimiter" >> $GITHUB_OUTPUT
+            cat result.txt >> $GITHUB_OUTPUT
+            echo "$output_delimiter" >> $GITHUB_OUTPUT
+            
             rm result.txt
           else
             echo "Failed to create result file."
