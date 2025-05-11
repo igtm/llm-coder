@@ -198,10 +198,8 @@ jobs:
               PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
               BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-              git fetch origin $BRANCH_NAME
-              git stash --include-untracked
-              git checkout $BRANCH_NAME
-              git stash pop || true
+              git fetch origin "$BRANCH_NAME"
+              git checkout "$BRANCH_NAME"
             fi
 
             git commit -m "Fixed by LLM-Coder" -m "Closes #${{ env.ISSUE_NUMBER }}"
@@ -209,7 +207,6 @@ jobs:
           else
             echo "SKIP_REMAINING=true" >> $GITHUB_ENV
             echo "No changes to commit. LLM-Coder did not modify any files."
-            exit 0
           fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
