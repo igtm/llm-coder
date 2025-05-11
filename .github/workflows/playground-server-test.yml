@@ -27,7 +27,7 @@ jobs:
         run: pip install uv
       - name: Install dependencies with uv
         run: |
-          uv pip sync uv.lock
+          uv sync uv.lock
         working-directory: playground/server
       - name: Run lint with uv
         run: |
@@ -48,7 +48,7 @@ jobs:
         run: pip install uv
       - name: Install dependencies with uv
         run: |
-          uv pip sync uv.lock
+          uv sync uv.lock
         working-directory: playground/server
       - name: Run tests for API
         run: |
