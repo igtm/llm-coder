@@ -214,9 +214,13 @@ jobs:
               PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
               BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+              # 変更を一時退避
+              git stash --include-untracked
               git fetch origin "$BRANCH_NAME"
               # ブランチのチェックアウトを試みる
               git checkout "$BRANCH_NAME"
+              # 退避した変更を復元
+              git stash pop || true
             fi
 
             echo "Changes detected. Proceeding with commit and push."
