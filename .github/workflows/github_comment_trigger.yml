@@ -354,8 +354,8 @@ jobs:
             const { repo, owner } = context.repo;
             const prNumber = process.env.ISSUE_NUMBER;
 
-            const escapedContent = '${{ steps.llm_coder_run.outputs.result_content }}'.replace(/"/g, '\"').replace(/TASK_COMPLETE/g, '').trim();
-            const commentBody = "🤖 LLM Coder applied the following changes based on your request:\n\n```${escapedContent}```";
+            const escapedContent = '${{ steps.llm_coder_run.outputs.result_content }}'.replace(/TASK_COMPLETE/g, '').trim();
+            const commentBody = "🤖 LLM Coder applied the following changes based on your request:\n\n```" + escapedContent + "```";
 
             // PRのdiffコメントの場合は、そのスレッドに返信
             if (context.eventName === 'pull_request_review_comment') {
