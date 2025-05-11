@@ -214,45 +214,76 @@ async def get_file_stats(file_path: str) -> FileInfo:
     )
 
 
+async def get_gitignore_patterns(directory: str) -> List[str]:
+    """指定されたディレクトリの .gitignore ファイルからパターンを読み込みます。"""
+    gitignore_path = os.path.join(directory, ".gitignore")
+    patterns = []
+    if await asyncio.to_thread(os.path.exists, gitignore_path):
+        try:
+            with open(gitignore_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    stripped_line = line.strip()
+                    if stripped_line and not stripped_line.startswith("#"):
+                        patterns.append(stripped_line)
+        except Exception as e:
+            logger.warning(
+                "Error reading .gitignore file", path=gitignore_path, error=e
+            )
+    return patterns
+
+
 async def search_files(
-    root_path: str, pattern: str, exclude_patterns: List[str] = []
+    root_path: str,
+    pattern: str,
+    exclude_patterns: List[str] = [],
+    exact_match: bool = False,
 ) -> List[str]:
     """Recursively search for files matching a pattern."""
     results = []
 
-    async def search(current_path: str):
-        entries = os.listdir(current_path)
+    async def search(current_path: str, current_exclude_patterns: List[str]):
+        combined_exclude_patterns = current_exclude_patterns
+
+        try:
+            entries = await asyncio.to_thread(os.listdir, current_path)
+        except OSError:
+            return
 
         for entry in entries:
             full_path = os.path.join(current_path, entry)
+            relative_path_to_root = os.path.relpath(full_path, root_path)
 
             try:
-                # Validate each path before processing
-                await validate_path(full_path)
-
-                # Check if path matches any exclude pattern
-                relative_path = os.path.relpath(full_path, root_path)
                 should_exclude = any(
-                    fnmatch.fnmatch(
-                        relative_path,
-                        glob_pattern if "*" in pattern else f"**/{pattern}/**",
-                    )
-                    for glob_pattern in exclude_patterns
+                    fnmatch.fnmatch(relative_path_to_root, p)
+                    or fnmatch.fnmatch(entry, p)
+                    for p in combined_exclude_patterns
                 )
 
                 if should_exclude:
                     continue
 
-                if pattern.lower() in entry.lower():
-                    results.append(full_path)
+                await validate_path(full_path)
 
-                if os.path.isdir(full_path):
-                    await search(full_path)
-            except Exception:
-                # Skip invalid paths during search
+                if await asyncio.to_thread(os.path.isfile, full_path):
+                    if exact_match:
+                        if entry.lower() == pattern.lower():
+                            results.append(full_path)
+                    else:
+                        if pattern.lower() in entry.lower():
+                            results.append(full_path)
+
+                if await asyncio.to_thread(os.path.isdir, full_path):
+                    await search(full_path, combined_exclude_patterns)
+            except ValueError:
+                continue
+            except Exception as e:
+                logger.debug(
+                    "Error processing path during search", path=full_path, error=str(e)
+                )
                 continue
 
-    await search(root_path)
+    await search(root_path, exclude_patterns)
     return results
 
 
@@ -266,11 +297,9 @@ def create_unified_diff(
     original_content: str, new_content: str, filepath: str = "file"
 ) -> str:
     """Create a unified diff between original and new content."""
-    # Ensure consistent line endings for diff
     normalized_original = normalize_line_endings(original_content)
     normalized_new = normalize_line_endings(new_content)
 
-    # Generate diff
     diff_lines = list(
         difflib.unified_diff(
             normalized_original.splitlines(),
@@ -288,22 +317,18 @@ async def apply_file_edits(
     file_path: str, edits: List[dict], dry_run: bool = False
 ) -> str:
     """Apply edits to a file and return the diff."""
-    # Read file content and normalize line endings
     with open(file_path, "r", encoding="utf-8") as f:
         content = normalize_line_endings(f.read())
 
-    # Apply edits sequentially
     modified_content = content
     for edit in edits:
         normalized_old = normalize_line_endings(edit["oldText"])
         normalized_new = normalize_line_endings(edit["newText"])
 
-        # If exact match exists, use it
         if normalized_old in modified_content:
             modified_content = modified_content.replace(normalized_old, normalized_new)
             continue
 
-        # Otherwise, try line-by-line matching with flexibility for whitespace
         old_lines = normalized_old.split("\n")
         content_lines = modified_content.split("\n")
         match_found = False
@@ -311,14 +336,12 @@ async def apply_file_edits(
         for i in range(len(content_lines) - len(old_lines) + 1):
             potential_match = content_lines[i : i + len(old_lines)]
 
-            # Compare lines with normalized whitespace
             is_match = all(
                 old_line.strip() == content_line.strip()
                 for old_line, content_line in zip(old_lines, potential_match)
             )
 
             if is_match:
-                # Preserve original indentation of first line
                 original_indent = ""
                 indent_match = potential_match[0].match(r"^\s*")
                 if indent_match:
@@ -329,7 +352,6 @@ async def apply_file_edits(
                     if j == 0:
                         new_lines.append(original_indent + line.lstrip())
                     else:
-                        # For subsequent lines, try to preserve relative indentation
                         old_indent = ""
                         new_indent = ""
 
@@ -360,10 +382,8 @@ async def apply_file_edits(
         if not match_found:
             raise ValueError(f"Could not find exact match for edit:\n{edit['oldText']}")
 
-    # Create unified diff
     diff = create_unified_diff(content, modified_content, file_path)
 
-    # Format diff with appropriate number of backticks
     num_backticks = 3
     while "`" * num_backticks in diff:
         num_backticks += 1
@@ -404,27 +424,107 @@ async def build_directory_tree(current_path: str) -> List[TreeEntry]:
 async def execute_read_file(arguments: Dict[str, Any]) -> str:
     """ファイルを読み込むツール実行関数"""
     args = ReadFileArgs.model_validate(arguments)
-    valid_path = await validate_path(args.path)
-
-    f = await asyncio.to_thread(open, valid_path, "r", encoding="utf-8")
     try:
-        content = await asyncio.to_thread(f.read)
-        return content
-    finally:
-        await asyncio.to_thread(f.close)
+        valid_path = await validate_path(args.path)
+        f = await asyncio.to_thread(open, valid_path, "r", encoding="utf-8")
+        try:
+            content = await asyncio.to_thread(f.read)
+            return content
+        finally:
+            await asyncio.to_thread(f.close)
+    except FileNotFoundError:
+        logger.info(
+            f"File not found: {args.path}. Searching for alternatives in allowed directories."
+        )
+        filename_to_search = os.path.basename(args.path)
+        candidate_files = set()
+
+        for allowed_dir in allowed_directories:
+            current_exclude_patterns = await get_gitignore_patterns(allowed_dir)
+
+            try:
+                validated_allowed_dir = await validate_path(allowed_dir)
+                found_in_dir = await search_files(
+                    validated_allowed_dir,
+                    filename_to_search,
+                    exclude_patterns=current_exclude_patterns,
+                    exact_match=True,
+                )
+                candidate_files.update(found_in_dir)
+            except ValueError as e:
+                logger.debug(
+                    f"Skipping search in {allowed_dir} due to validation error: {e}"
+                )
+                continue
+            except Exception as e:
+                logger.warning(f"Error searching in directory {allowed_dir}: {e}")
+                continue
+
+        if candidate_files:
+            candidates_str = "\n".join(sorted(list(candidate_files)))
+            return (
+                f"ファイル '{args.path}' は見つかりませんでした。\n"
+                f"以下の候補が見つかりました:\n{candidates_str}"
+            )
+        else:
+            return f"ファイル '{args.path}' は見つからず、他の場所でも候補は見つかりませんでした。"
+    except Exception as e:
+        logger.error(f"Error reading file {args.path}: {e}")
+        return f"ファイル '{args.path}' の読み込み中にエラーが発生しました: {str(e)}"
 
 
 async def execute_write_file(arguments: Dict[str, Any]) -> str:
     """ファイルを書き込むツール実行関数"""
     args = WriteFileArgs.model_validate(arguments)
-    valid_path = await validate_path(args.path)
-
-    f = await asyncio.to_thread(open, valid_path, "w", encoding="utf-8")
     try:
-        await asyncio.to_thread(f.write, args.content)
-        return f"ファイル '{args.path}' への書き込みに成功しました。"
-    finally:
-        await asyncio.to_thread(f.close)
+        valid_path = await validate_path(args.path)
+
+        # 親ディレクトリが存在するか確認
+        parent_dir = os.path.dirname(valid_path)
+        if not os.path.exists(parent_dir):
+            raise FileNotFoundError(f"親ディレクトリが存在しません: {parent_dir}")
+
+        f = await asyncio.to_thread(open, valid_path, "w", encoding="utf-8")
+        try:
+            await asyncio.to_thread(f.write, args.content)
+            return f"ファイル '{args.path}' への書き込みに成功しました。"
+        finally:
+            await asyncio.to_thread(f.close)
+    except FileNotFoundError as e:
+        logger.info(
+            f"File cannot be written: {args.path}. Searching for alternative locations."
+        )
+        filename = os.path.basename(args.path)
+        alternative_paths = []
+
+        for allowed_dir in allowed_directories:
+            try:
+                validated_allowed_dir = await validate_path(allowed_dir)
+                if os.path.exists(validated_allowed_dir) and os.access(
+                    validated_allowed_dir, os.W_OK
+                ):
+                    alternative_path = os.path.join(validated_allowed_dir, filename)
+                    alternative_paths.append(alternative_path)
+            except ValueError as ve:
+                logger.debug(
+                    f"Skipping alternative directory {allowed_dir} due to validation error: {ve}"
+                )
+                continue
+            except Exception as ex:
+                logger.warning(f"Error checking directory {allowed_dir}: {ex}")
+                continue
+
+        if alternative_paths:
+            alternatives_str = "\n".join(sorted(alternative_paths))
+            return (
+                f"ファイル '{args.path}' に書き込めませんでした: {str(e)}\n"
+                f"以下の場所に代わりに書き込むことができます:\n{alternatives_str}"
+            )
+        else:
+            return f"ファイル '{args.path}' に書き込めず、代替の書き込み先も見つかりませんでした。"
+    except Exception as e:
+        logger.error(f"Error writing file {args.path}: {e}")
+        return f"ファイル '{args.path}' の書き込み中にエラーが発生しました: {str(e)}"
 
 
 async def execute_edit_file(arguments: Dict[str, Any]) -> str:
@@ -432,7 +532,6 @@ async def execute_edit_file(arguments: Dict[str, Any]) -> str:
     args = EditFileArgs.model_validate(arguments)
     valid_path = await validate_path(args.path)
 
-    # 型変換: EditOperation オブジェクトのリストから辞書のリストへ
     edits_as_dicts = [edit.dict() for edit in args.edits]
     return await apply_file_edits(valid_path, edits_as_dicts, args.dryRun)
 
@@ -448,12 +547,10 @@ async def execute_list_directory(arguments: Dict[str, Any]) -> str:
     for entry in entries:
         entry_path = os.path.join(valid_path, entry)
         try:
-            # 各エントリも検証
             await validate_path(entry_path)
             is_dir = await asyncio.to_thread(os.path.isdir, entry_path)
             formatted.append(f"[DIR] {entry}" if is_dir else f"[FILE] {entry}")
         except ValueError:
-            # アクセス不可のエントリはスキップまたは表示
             continue
 
     return (
@@ -468,7 +565,12 @@ async def execute_search_files(arguments: Dict[str, Any]) -> str:
     args = SearchFilesArgs.model_validate(arguments)
     valid_path = await validate_path(args.path)
 
-    results = await search_files(valid_path, args.pattern, args.excludePatterns)
+    gitignore_patterns = await get_gitignore_patterns(valid_path)
+    combined_exclude_patterns = list(set(gitignore_patterns + args.excludePatterns))
+
+    results = await search_files(
+        valid_path, args.pattern, combined_exclude_patterns, exact_match=False
+    )
     return "\n".join(results) if results else "一致するファイルは見つかりませんでした"
 
 
