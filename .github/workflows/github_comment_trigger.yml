@@ -226,7 +226,7 @@ jobs:
             const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
             const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
 
-            const diff = execSync('git diff --staged', { maxBuffer: 50 * 1024 * 1024 }).toString(); // 50MBバッファを割り当て
+            const diff = execSync('git diff --staged').toString();
             let commitMessage = "Automated changes";
 
             if (diff.trim() === "") {
@@ -287,7 +287,7 @@ jobs:
 
             // Get diff content
             const { execSync } = require('child_process');
-            const diff = execSync('git diff HEAD^', { maxBuffer: 50 * 1024 * 1024 }).toString(); // 50MBバッファを割り当て
+            const diff = execSync('git diff HEAD^').toString();
 
             // Generate PR description using  OpenAI API
             const { OpenAI } = require("openai");
@@ -331,7 +331,7 @@ jobs:
 
             // Get diff content
             const { execSync } = require('child_process');
-            const diff = execSync('git diff HEAD^', { maxBuffer: 50 * 1024 * 1024 }).toString(); // 50MBバッファを割り当て
+            const diff = execSync('git diff HEAD^').toString();
 
             const { OpenAI } = require("openai");
             const client = new OpenAI({
