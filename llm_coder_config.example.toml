@@ -26,12 +26,12 @@ allowed_dirs = [
 repository_description_prompt = """
 ## server ディレクトリ (Python FastAPIプロジェクト)
 
-### コマンド
+### コマンド(以下のコマンド以外は実行してはいけません)
 - **CI (Lint, Format, Testを一括実行):** `command: uv run poe ci, workspace: playground/server`
 
 ## front ディレクトリ (TypeScript React Viteプロジェクト)
 
-### コマンド (package.json の scripts を参照)
+### コマンド(以下のコマンド以外は実行してはいけません)
 - **CI (Install, Lint, Test, Buildを一括実行):** `command: yarn ci, workspace: playground/front`
 
 """
