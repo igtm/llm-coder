@@ -51,6 +51,10 @@ options:
                         ファイルシステム操作を許可するディレクトリ（スペース区切りで複数指定可） (デフォルト: ['.', 'playground'])
   --repository-description-prompt REPOSITORY_DESCRIPTION_PROMPT
                         LLMに渡すリポジトリの説明プロンプト (デフォルト: TOMLファイルまたは空)
+  --output OUTPUT, -o OUTPUT
+                        実行結果を出力するファイルパス (デフォルト: なし、標準出力のみ)
+  --conversation-history CONVERSATION_HISTORY, -ch CONVERSATION_HISTORY
+                        エージェントの会話履歴を出力するファイルパス (デフォルト: なし)
 ```
 
 ### 使用例
@@ -67,6 +71,15 @@ llm-coder --temperature 0.7 --max-iterations 5 "Create a python script that outp
 
 # 許可するディレクトリを指定
 llm-coder --allowed-dirs . ./output ./src "Create a python script that outputs 'hello world'"
+
+# 実行結果をファイルに出力
+llm-coder --output result.txt "Create a python script that outputs 'hello world'"
+
+# 会話履歴をファイルに出力
+llm-coder --conversation-history conversation.txt "Create a python script that outputs 'hello world'"
+
+# 実行結果と会話履歴の両方をファイルに出力
+llm-coder --output result.txt --conversation-history conversation.txt "Create a python script that outputs 'hello world'"
 ```
 
 ## 設定
@@ -85,8 +98,10 @@ model = "claude-3-opus-20240229"
 prompt = "Create a python script that outputs 'hello world'"
 temperature = 0.5
 max_iterations = 10
-allowed_dirs = [".", "playground", "src"]
+allowed_dirs = ["."]
 repository_description_prompt = "このリポジトリはPythonのユーティリティツールです"
+# output = "result.txt"
+# conversation_history = "conversation.txt"
 ```
 
 設定ファイルを使用する場合:

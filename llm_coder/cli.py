@@ -119,6 +119,26 @@ def parse_args():
         help="LLMに渡すリポジトリの説明プロンプト (デフォルト: TOMLファイルまたは空)",
     )
 
+    # 出力ファイルのオプションを追加
+    output_default = config_values.get("output", None)
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default=output_default,
+        help="実行結果を出力するファイルパス (デフォルト: なし、標準出力のみ)",
+    )
+
+    # 会話履歴出力ファイルのオプションを追加
+    conversation_history_default = config_values.get("conversation_history", None)
+    parser.add_argument(
+        "--conversation-history",
+        "-ch",
+        type=str,
+        default=conversation_history_default,
+        help="エージェントの会話履歴を出力するファイルパス (デフォルト: なし)",
+    )
+
     # remaining_argv を使って、--config 以外の引数を解析
     return parser.parse_args(remaining_argv)
 
@@ -182,6 +202,35 @@ async def run_agent_from_cli(args):
     result = await agent_instance.run(prompt)  # agent_instance を使用
     logger.info("===== 実行結果 =====")
     logger.info(result)  # result が複数行の場合もそのままログに出力
+
+    # 出力ファイルが指定されている場合、結果をファイルに書き込む
+    if args.output:
+        try:
+            with open(args.output, "w", encoding="utf-8") as f:
+                f.write(result)
+            logger.info(f"実行結果をファイル '{args.output}' に書き出しました")
+        except Exception as e:
+            logger.error(
+                f"ファイル '{args.output}' への書き込み中にエラーが発生しました: {e}"
+            )
+
+    # 会話履歴出力ファイルが指定されている場合、会話履歴をファイルに書き込む
+    if args.conversation_history:
+        try:
+            with open(args.conversation_history, "w", encoding="utf-8") as f:
+                for message in agent_instance.conversation_history:
+                    # 各メッセージの内容をわかりやすく書き出す
+                    role = message.get("role", "unknown")
+                    content = message.get("content", "")
+                    f.write(f"# {role.upper()}\n{content}\n\n")
+            logger.info(
+                f"会話履歴をファイル '{args.conversation_history}' に書き出しました"
+            )
+        except Exception as e:
+            logger.error(
+                f"ファイル '{args.conversation_history}' への会話履歴の書き込み中にエラーが発生しました: {e}"
+            )
+
     logger.info("Agent run completed from CLI")
 
 

@@ -22,6 +22,12 @@ allowed_dirs = [
     # "/tmp/llm_coder_output" # 必要に応じて他のディレクトリを追加
 ]
 
+# 実行結果を出力するファイルパス (省略可能)
+# output = "result.txt"
+
+# エージェントの会話履歴を出力するファイルパス (省略可能)
+# conversation_history = "conversation.txt"
+
 # リポジトリの説明プロンプト (エージェントにリポジトリのコンテキストを理解させるために使用)
 repository_description_prompt = """
 ## server ディレクトリ (Python FastAPIプロジェクト)

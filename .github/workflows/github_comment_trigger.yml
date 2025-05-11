@@ -164,11 +164,26 @@ jobs:
           echo "$HOME/.ruff/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH # uv is installed to .cargo/bin by default
       - name: Run LLM Coder
+        id: llm_coder_run # 後続のステップで出力を参照するためのID
         run: |
-          # Escape newlines and quotes in problem statement
+          # PROBLEM_STATEMENT内の改行と引用符をエスケープする
           ESCAPED_PROBLEM_STATEMENT=$(echo "$PROBLEM_STATEMENT" | awk '{printf "%s\\n", $0}' | sed 's/"/\\"/g')
 
-          llm-coder "$ESCAPED_PROBLEM_STATEMENT"
+          llm-coder "$ESCAPED_PROBLEM_STATEMENT" -o result.txt
+          # result.txt ファイルが正常に作成されたか確認する
+            if [ -f result.txt ]; then
+            echo "Result file created successfully."
+            # result.txt の内容を読み込み、GITHUB_OUTPUT に設定する
+            # 複数行の出力を扱うために、ヒアドキュメント形式で GITHUB_OUTPUT に書き込む
+            echo "result_content<<EOF_RESULT_CONTENT" >> $GITHUB_OUTPUT
+            cat result.txt >> $GITHUB_OUTPUT
+            echo "EOF_RESULT_CONTENT" >> $GITHUB_OUTPUT
+            rm result.txt
+          else
+            echo "Failed to create result file."
+            # ファイルが存在しない場合でも、後続のステップがエラーにならないように空の出力を設定する
+            echo "result_content=" >> $GITHUB_OUTPUT
+          fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
           AWS_REGION_NAME: us-west-2
@@ -366,6 +381,12 @@ jobs:
             }
 
             let commentBody = `🤖 LLM Coder applied the following changes based on your request:\n\n${generatedDescription}`;
+
+            // result_content を commentBody に追記
+            const resultContent = `${{ steps.llm_coder_run.outputs.result_content }}`;
+            if (resultContent && resultContent.trim()) {
+              commentBody += `\n\n## LLM Coder Result\n\n${resultContent}`;
+            }
 
             // PRのdiffコメントの場合は、そのスレッドに返信
             if (context.eventName === 'pull_request_review_comment') {
