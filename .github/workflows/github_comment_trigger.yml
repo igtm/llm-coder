@@ -227,6 +227,7 @@ jobs:
             const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
 
             const diff = execSync('git diff --staged').toString();
+            console.log("Staged changes detected. Generating commit message...", diff); 
             let commitMessage = "Automated changes";
 
             if (diff.trim() === "") {
