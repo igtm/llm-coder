@@ -27,11 +27,11 @@ repository_description_prompt = """
 ## server ディレクトリ (Python FastAPIプロジェクト)
 
 ### コマンド
-- **CI (Lint, Format, Testを一括実行):** `uv run poe ci`
+- **CI (Lint, Format, Testを一括実行):** `command: uv run poe ci, workspace: playground/server`
 
 ## front ディレクトリ (TypeScript React Viteプロジェクト)
 
 ### コマンド (package.json の scripts を参照)
-- **CI (Install, Lint, Test, Buildを一括実行):** `yarn ci`
+- **CI (Install, Lint, Test, Buildを一括実行):** `command: yarn ci, workspace: playground/front`
 
 """
