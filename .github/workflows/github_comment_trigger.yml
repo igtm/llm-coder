@@ -341,9 +341,8 @@ jobs:
             });
 
             console.log(`Pull Request created: ${pr.data.html_url}`);
-
       - name: Add PR Comment
-        if: ${{ (github.event_name != 'issue_comment' || github.event.issue.pull_request) && env.SKIP_REMAINING != 'true' }}
+        if: ${{ (github.event_name != 'issue_comment' || github.event.issue.pull_request) }}
         continue-on-error: true
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
@@ -355,35 +354,7 @@ jobs:
             const { repo, owner } = context.repo;
             const prNumber = process.env.ISSUE_NUMBER;
 
-            // Get diff content
-            const { execSync } = require('child_process');
-            const diff = execSync('git diff HEAD^').toString();
-
-            const { OpenAI } = require("openai");
-            const client = new OpenAI({
-              apiKey: process.env.OPENAI_API_KEY,
-            });
-            const modelName = '${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}';
-
-            const prompt = `Generate a concise comment in ${process.env.LLM_COMMENT_LANGUAGE} explaining the changes introduced by the following git commit diff. Format it nicely using Markdown.\n\nGit diff:\n\`\`\`diff\n${diff}\n\`\`\``;
-            let generatedDescription = 'Applied automated code changes.';
-            try {
-              const completion = await client.chat.completions.create({
-                model: modelName,
-                messages: [{ role: 'user', content: prompt }],
-              });
-              generatedDescription = completion.choices[0].message.content;
-            } catch (error) {
-              console.error("Error generating comment description:", error);
-            }
-
-            let commentBody = `🤖 LLM Coder applied the following changes based on your request:\n\n${generatedDescription}`;
-
-            // result_content を commentBody に追記
-            const resultContent = `${{ steps.llm_coder_run.outputs.result_content }}`;
-            if (resultContent && resultContent.trim()) {
-              commentBody += `\n\n## LLM Coder Result\n\n${resultContent}`;
-            }
+            const commentBody = `🤖 LLM Coder applied the following changes based on your request:\n\n## LLM Coder Result\n\n\`\`\`${{ steps.llm_coder_run.outputs.result_content }}\`\`\``;
 
             // PRのdiffコメントの場合は、そのスレッドに返信
             if (context.eventName === 'pull_request_review_comment') {
