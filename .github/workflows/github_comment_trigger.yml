@@ -171,13 +171,15 @@ jobs:
 
           llm-coder "$ESCAPED_PROBLEM_STATEMENT" -o result.txt
           # result.txt ファイルが正常に作成されたか確認する
-            if [ -f result.txt ]; then
+          if [ -f result.txt ]; then
             echo "Result file created successfully."
             # result.txt の内容を読み込み、GITHUB_OUTPUT に設定する
-            # 複数行の出力を扱うために、ヒアドキュメント形式で GITHUB_OUTPUT に書き込む
-            echo "result_content<<EOF_RESULT_CONTENT" >> $GITHUB_OUTPUT
-            cat result.txt >> $GITHUB_OUTPUT
-            echo "EOF_RESULT_CONTENT" >> $GITHUB_OUTPUT
+            # 複数行の出力を扱うために、より信頼性の高い方法で GITHUB_OUTPUT に書き込む
+            {
+              echo "result_content<<LLMCODER_EOF"
+              cat result.txt
+              echo "LLMCODER_EOF"
+            } >> $GITHUB_OUTPUT
             rm result.txt
           else
             echo "Failed to create result file."
