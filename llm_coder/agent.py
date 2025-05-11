@@ -100,6 +100,10 @@ class Agent:
             for tool in self.available_tools
         ]
 
+        # トークン使用量を記録
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+
         logger.debug(
             "Agent initialized",
             model=self.model,
@@ -204,6 +208,18 @@ class Agent:
             logger.debug(
                 "LLM response received for initial plan", response_id=response.id
             )
+            # トークン使用量を記録・ログ出力
+            if response.usage:
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+                self.total_prompt_tokens += prompt_tokens
+                self.total_completion_tokens += completion_tokens
+                logger.debug(
+                    "LLM token usage for initial plan",
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=prompt_tokens + completion_tokens,
+                )
 
             assistant_message_data = response.choices[0].message
             self.conversation_history.append(
@@ -270,6 +286,18 @@ class Agent:
                     "LLM response received for completion check",
                     response_id=response.id,
                 )
+                # トークン使用量を記録・ログ出力
+                if response.usage:
+                    prompt_tokens = response.usage.prompt_tokens
+                    completion_tokens = response.usage.completion_tokens
+                    self.total_prompt_tokens += prompt_tokens
+                    self.total_completion_tokens += completion_tokens
+                    logger.debug(
+                        "LLM token usage for completion check",
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=prompt_tokens + completion_tokens,
+                    )
 
                 check_message_data = response.choices[0].message
                 self.conversation_history.append(
@@ -359,6 +387,18 @@ class Agent:
             logger.debug(
                 "LLM response received for next actions", response_id=response.id
             )
+            # トークン使用量を記録・ログ出力
+            if response.usage:
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+                self.total_prompt_tokens += prompt_tokens
+                self.total_completion_tokens += completion_tokens
+                logger.debug(
+                    "LLM token usage for next actions",
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=prompt_tokens + completion_tokens,
+                )
 
             new_message_data = response.choices[0].message
             self.conversation_history.append(
@@ -393,6 +433,9 @@ class Agent:
     async def run(self, prompt: str) -> str:
         """エージェントを実行し、プロンプトに応じたタスクを完了する"""
         logger.info("Starting agent run", initial_prompt=prompt)
+        # 合計トークン数をリセット
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
 
         await self._planning_phase(prompt)
 
@@ -427,6 +470,18 @@ class Agent:
                     "LLM response received for final summary",
                     response_id=final_response.id,
                 )
+                # トークン使用量を記録・ログ出力
+                if final_response.usage:
+                    prompt_tokens = final_response.usage.prompt_tokens
+                    completion_tokens = final_response.usage.completion_tokens
+                    self.total_prompt_tokens += prompt_tokens
+                    self.total_completion_tokens += completion_tokens
+                    logger.debug(
+                        "LLM token usage for final summary",
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=prompt_tokens + completion_tokens,
+                    )
 
                 final_message_content = final_response.choices[0].message.get(
                     "content", "タスクは完了しましたが、要約情報はありません。"
@@ -435,10 +490,24 @@ class Agent:
                     "Agent run finished, returning final summary.",
                     summary_length=len(final_message_content),
                 )
+                logger.info(
+                    "Total token usage for run",
+                    total_prompt_tokens=self.total_prompt_tokens,
+                    total_completion_tokens=self.total_completion_tokens,
+                    overall_total_tokens=self.total_prompt_tokens
+                    + self.total_completion_tokens,
+                )
                 return final_message_content
 
         logger.warning(
             "Maximum iterations reached without completion",
             max_iterations=self.max_iterations,
+        )
+        logger.info(
+            "Total token usage for run (incomplete)",
+            total_prompt_tokens=self.total_prompt_tokens,
+            total_completion_tokens=self.total_completion_tokens,
+            overall_total_tokens=self.total_prompt_tokens
+            + self.total_completion_tokens,
         )
         return "最大イテレーション数に達しました。タスクは未完了の可能性があります。"
