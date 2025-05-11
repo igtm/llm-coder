@@ -1,15 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "llm-coder"
-version = "0.1.0"
-description = "Add your description here"
+name = "llm_coder"
+version = "0.1.0" # プロジェクトのバージョンに合わせて変更してください
+description = "llm による自立型 Cli コーディングエージェントライブラリ"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.8"
+license = { file = "LICENSE" } # 必要に応じてLICENSEファイルを作成・指定してください
+# classifiers や authors などの情報も追加できます
+
 dependencies = [
-    "litellm>=1.68.2",
-    "pydantic>=2.11.4",
-    "structlog>=25.3.0",
-    "toml>=0.10.2",
+    "litellm", # llm_coder が依存するライブラリを列挙
+    "toml",
+    "structlog",
+    # 他に必要な依存関係があればここに追加
 ]
+
+[project.scripts]
+llm-coder = "llm_coder.cli:run_cli"
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/llm_coder" # プロジェクトのURLに置き換えてください
+"Bug Tracker" = "https://github.com/yourusername/llm_coder/issues" # プロジェクトのIssueトラッカーに置き換えてください
 
 [dependency-groups]
 dev = [
