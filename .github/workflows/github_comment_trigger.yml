@@ -193,18 +193,23 @@ jobs:
           git config user.email "noemail@igtm.link" && git config user.name "LLM-Coder"
 
           # Apply patch
+          git status
           git add .
+          git status
 
           # Check if there are any changes
           if ! git diff --staged --quiet; then
+            echo "Changes detected. Proceeding with commit and push."
             echo "SKIP_REMAINING=false" >> $GITHUB_ENV
             # Issue comment かつ PR でない場合は新しいブランチを作成
             if [ "${{ github.event_name }}" = "issue_comment" ] && [ -z "${{ github.event.issue.pull_request }}" ]; then
+              echo "Creating a new branch for the changes."
               BRANCH_NAME="LLM-Coder-fix-issue-${{ env.ISSUE_NUMBER }}-$(echo $RANDOM | md5sum | cut -c1-8)"
               echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
               git checkout -b "$BRANCH_NAME"
             else
               # PR に対するコメントの場合は、その PR のブランチを使用
+              echo "Fetching the branch for the PR."
               PR_NUMBER=${{ env.ISSUE_NUMBER }}
               PR_DATA=$(gh pr view $PR_NUMBER --json headRefName)
               BRANCH_NAME=$(echo $PR_DATA | jq -r .headRefName)
