@@ -30,9 +30,9 @@ jobs:
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
         with:
           path: playground/server/.venv
-          key: server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/poetry.lock') }}
+          key: server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
           restore-keys: |
-            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/poetry.lock') }}
+            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
             server-uv-venv-${{ steps.setup-python.outputs.python-version }}-
       - name: Install dependencies with uv
         run: |
@@ -42,7 +42,7 @@ jobs:
           else
             echo ".venv already exists (likely from cache)"
           fi
-          uv pip sync poetry.lock
+          uv pip sync uv.lock
         working-directory: playground/server
       - name: Run lint with uv
         run: |
@@ -71,9 +71,9 @@ jobs:
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
         with:
           path: playground/server/.venv
-          key: server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/poetry.lock') }}
+          key: server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
           restore-keys: |
-            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/poetry.lock') }}
+            server-uv-venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('playground/server/uv.lock') }}
             server-uv-venv-${{ steps.setup-python.outputs.python-version }}-
       - name: Install dependencies with uv
         run: |
@@ -83,7 +83,7 @@ jobs:
           else
             echo ".venv already exists (likely from cache)"
           fi
-          uv pip sync poetry.lock
+          uv pip sync uv.lock
         working-directory: playground/server
       - name: Run tests for API
         run: |
