@@ -14,6 +14,9 @@ except ImportError:
 
 logger = structlog.get_logger(__name__)
 
+# シェルコマンドの最大出力長。これを超えると丸め処理が行われる。
+MAX_OUTPUT_THRESHOLD = 7500
+
 
 # スキーマ定義
 class ShellCommandArgs(BaseModel):
@@ -81,6 +84,35 @@ async def execute_shell_command_async(arguments: Dict[str, Any]) -> str:
                 command=args.command,
                 workspace=args.workspace or "カレントディレクトリ",
                 return_code=process.returncode,
+            )
+
+        # 出力を丸める処理
+        # 実際の出力は truncate_part_length + 省略記号 + truncate_part_length となるため、
+        # 指定された最大長を若干超える可能性があります。
+        truncate_part_length = (
+            MAX_OUTPUT_THRESHOLD // 2
+        )  # 先頭・末尾それぞれで保持する文字数
+
+        original_output_length = len(output)
+
+        if original_output_length > MAX_OUTPUT_THRESHOLD:
+            ellipsis = (
+                f"\n... (出力が長すぎるため省略されました。"
+                f"合計 {original_output_length} 文字。"
+                f"先頭と末尾の各{truncate_part_length}文字を表示) ...\n"
+            )
+
+            output_head = output[:truncate_part_length]
+            output_tail = output[-truncate_part_length:]
+
+            output = output_head + ellipsis + output_tail
+
+            logger.info(
+                "シェルコマンドの出力が長すぎるため丸められました",
+                command=args.command,
+                original_length=original_output_length,
+                truncated_length=len(output),  # 丸め後の実際の長さ
+                max_threshold=MAX_OUTPUT_THRESHOLD,
             )
 
         return output if output else "コマンドは出力を生成しませんでした。"
