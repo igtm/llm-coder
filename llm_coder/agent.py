@@ -7,6 +7,7 @@ import structlog
 
 try:
     import litellm
+
     # ストリーミングチャンクの繰り返し制限を設定
     litellm.REPEATED_STREAMING_CHUNK_LIMIT = 30
 except ImportError:
@@ -475,6 +476,7 @@ class Agent:
                     model=self.model,
                     messages=[msg.to_dict() for msg in self.conversation_history],
                     temperature=self.temperature,
+                    tools=self.tools,  # ツールパラメータを追加
                     timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
                 )
                 logger.debug(
