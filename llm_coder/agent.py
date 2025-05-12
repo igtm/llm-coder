@@ -85,7 +85,7 @@ class Agent:
         ] = None,  # ツールリストをコンストラクタで受け取る
         final_summary_prompt: str = FINAL_SUMMARY_PROMPT,  # 最終要約用プロンプト
         repository_description_prompt: str = None,  # リポジトリ説明プロンプト
-        request_timeout: int = 60,  # 1回のリクエストに対するタイムアウト秒数（CLIから調整可能、デフォルト60）
+        request_timeout: int = 180,  # 1回のリクエストに対するタイムアウト秒数（CLIから調整可能、デフォルト180）
     ):
         self.model = model
         self.temperature = temperature
