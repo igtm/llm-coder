@@ -23,7 +23,7 @@ jobs:
           # PRの場合はfeatureブランチを直接チェックアウト
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
       - name: Run LLM Coder Action
-        uses: igtm/llm-coder-action@main
+        uses: igtm/llm-coder-action@v1
         with:
           llm_coder_command: '/llm-coder'
           llm_model: ${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}
