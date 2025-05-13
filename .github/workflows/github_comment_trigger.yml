@@ -22,6 +22,7 @@ jobs:
           submodules: recursive
           # PRの場合はfeatureブランチを直接チェックアウト
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
+      - run: cp llm_coder_config.example.toml llm_coder_config.toml
       - name: Run LLM Coder Action
         uses: igtm/llm-coder-action@v1
         with:
