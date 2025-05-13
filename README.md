@@ -138,3 +138,62 @@ uv run python -m llm_coder.cli <引数...>
 # プロジェクトのルートディレクトリにいることを想定
 uv run python -m llm_coder.cli "Create a python script that outputs 'hello world'"
 ```
+
+## llm-coder-litellm コマンドの使用方法
+
+`llm-coder-litellm` コマンドは LiteLLM ライブラリを直接使用して LLM の completion API を呼び出すためのシンプルなラッパーです。
+
+```bash
+llm-coder-litellm --model <モデル名> [オプション...] "プロンプト"
+```
+
+### 利用可能なオプション
+
+```text
+usage: llm-coder-litellm [-h] --model MODEL [--temperature TEMPERATURE] [--max_tokens MAX_TOKENS] [--top_p TOP_P] [--n N] [--stream] [--stop [STOP ...]]
+                         [--presence_penalty PRESENCE_PENALTY] [--frequency_penalty FREQUENCY_PENALTY] [--user USER] [--response_format RESPONSE_FORMAT]
+                         [--seed SEED] [--timeout TIMEOUT] [--output OUTPUT] [--extra EXTRA]
+                         [prompt]
+
+litellm completion API ラッパー
+
+positional arguments:
+  prompt                プロンプト（省略時は標準入力）
+
+options:
+  -h, --help            show this help message and exit
+  --model MODEL         モデル名
+  --temperature TEMPERATURE
+                        温度パラメータ (デフォルト: 0.2)
+  --max_tokens MAX_TOKENS
+                        max_tokens
+  --top_p TOP_P         top_p
+  --n N                 n
+  --stream              ストリーム出力
+  --stop [STOP ...]     ストップ語
+  --presence_penalty PRESENCE_PENALTY
+                        presence_penalty
+  --frequency_penalty FREQUENCY_PENALTY
+                        frequency_penalty
+  --user USER           user
+  --response_format RESPONSE_FORMAT
+                        response_format (json など)
+  --seed SEED           seed
+  --timeout TIMEOUT     リクエストタイムアウト秒数 (デフォルト: 60)
+  --output OUTPUT, -o OUTPUT
+                        出力ファイル
+  --extra EXTRA         追加のJSONパラメータ
+```
+
+### 使用例
+
+```bash
+# 基本的な使い方
+llm-coder-litellm --model gpt-4.1-nano "Generate a summary of the following text"
+
+# 温度を指定
+llm-coder-litellm --model gpt-4.1-nano --temperature 0.7 "Generate a summary of the following text"
+
+# 出力をファイルに保存
+llm-coder-litellm --model gpt-4.1-nano --output summary.txt "Generate a summary of the following text"
+```

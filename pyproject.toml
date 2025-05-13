@@ -19,7 +19,8 @@ dependencies = [
 ]
 
     [project.scripts]
-    llm-coder = "llm_coder.cli:run_cli"
+    llm-coder         = "llm_coder.cli:run_cli"
+    llm-coder-litellm = "llm_coder.litellm_cli:run_litellm_cli"
 
     [project.urls]
     "Homepage"    = "https://github.com/igtm/llm_coder"

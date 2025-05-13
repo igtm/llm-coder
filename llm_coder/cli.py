@@ -248,7 +248,6 @@ def run_cli():
     """Entry point for the CLI script."""
     args = parse_args()
 
-    # agent サブコマンドがなくなったため、直接エージェント実行ロジックを呼び出す
     asyncio.run(run_agent_from_cli(args))
 
 
