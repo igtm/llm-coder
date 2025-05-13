@@ -1,7 +1,9 @@
 import argparse
 import asyncio
 import sys
+import os
 import structlog
+import toml
 
 logger = structlog.get_logger("llm_coder.litellm_cli")
 
@@ -11,13 +13,56 @@ except ImportError:
     litellm = None  # litellm がない場合は None
 
 
-def parse_litellm_args(argv):
+def load_config(config_path=None):
+    """TOML設定ファイルを読み込む関数"""
+    config_values = {}
+    default_config_filename = "llm_coder_config.toml"
+    config_file_path_to_load = config_path or default_config_filename
+
+    if os.path.exists(config_file_path_to_load):
+        with open(config_file_path_to_load, "r", encoding="utf-8") as f:
+            config_values = toml.load(f)
+
+    return config_values
+
+
+def parse_litellm_args(argv, config_values=None):
+    # 設定ファイルからのデフォルト値を使用
+    config_values = config_values or {}
+
+    # 設定ファイル専用のパーサーを作成して、--config 引数を先に解析
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument(
+        "--config",
+        type=str,
+        default="llm_coder_config.toml",  # デフォルトファイル名を設定
+        help="TOML設定ファイルのパス (デフォルト: llm_coder_config.toml)",
+    )
+    config_args, remaining_argv = config_parser.parse_known_args(argv)
+
     # litellm コマンド用の引数パーサー
     parser = argparse.ArgumentParser(
         description="litellm completion API ラッパー",
+        parents=[config_parser],
     )
-    parser.add_argument("--model", type=str, required=True, help="モデル名")
-    parser.add_argument("--temperature", type=float, default=0.2, help="温度パラメータ")
+
+    # 設定ファイルから値を取得、なければデフォルト値を使用
+    model_default = config_values.get("model", None)
+    temperature_default = config_values.get("temperature", 0.2)
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        required=model_default is None,  # 設定ファイルにあれば必須でなくする
+        default=model_default,
+        help="モデル名",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=temperature_default,
+        help=f"温度パラメータ (デフォルト: {temperature_default})",
+    )
     parser.add_argument("--max_tokens", type=int, default=None, help="max_tokens")
     parser.add_argument("--top_p", type=float, default=None, help="top_p")
     parser.add_argument("--n", type=int, default=None, help="n")
@@ -46,7 +91,7 @@ def parse_litellm_args(argv):
         default=None,
         help="プロンプト（省略時は標準入力）",
     )
-    return parser.parse_args(argv)
+    return parser.parse_args(remaining_argv)
 
 
 async def run_litellm_from_cli(args):
@@ -129,10 +174,19 @@ async def run_litellm_from_cli(args):
         logger.error(f"litellm acompletion 実行中にエラー: {e}")
 
 
-# エントリーポイント関数を追加
+# エントリーポイント関数を修正
 def run_litellm_cli():
     """llm-coder-litellm コマンドのエントリーポイント"""
-    args = parse_litellm_args(sys.argv[1:])
+    # 最初に --config オプションのみを解析
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str, default="llm_coder_config.toml")
+    config_args, _ = config_parser.parse_known_args(sys.argv[1:])
+
+    # 設定ファイルを読み込む
+    config_values = load_config(config_args.config)
+
+    # 設定ファイルの値を引数パーサーに渡す
+    args = parse_litellm_args(sys.argv[1:], config_values)
     asyncio.run(run_litellm_from_cli(args))
 
 
