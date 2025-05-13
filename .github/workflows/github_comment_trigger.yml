@@ -11,13 +11,9 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-
-env: # グローバル環境変数を設定
-  LLM_CODER_COMMAND: "/llm-coder" # LLM Coderコマンド
-
 jobs:
   llm-coder:
-    if: contains(github.event.comment.body, env.LLM_CODER_COMMAND)
+    if: contains(github.event.comment.body, '/llm-coder')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,7 +25,7 @@ jobs:
       - name: Run LLM Coder Action
         uses: igtm/llm-coder-action@main
         with:
-          llm_coder_command: ${{ env.LLM_CODER_COMMAND }}
+          llm_coder_command: '/llm-coder'
           llm_model: ${{ vars.LLM_MODEL || 'gpt-4.1-nano' }}
           github_token: ${{ secrets.GH_PAT }}
           extra_pip: "boto3 poetry poethepoet"
