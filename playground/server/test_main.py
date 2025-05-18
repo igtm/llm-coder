@@ -10,7 +10,13 @@ def test_read_root():
     """
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == "Hello USA"
+    assert response.json() == "Hello France"
+    """
+    ルートエンドポイント ("/") のテスト。
+    """
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == "Hello Italy"
 
 
 def test_read_item():
