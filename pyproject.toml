@@ -3,7 +3,7 @@ requires      = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name            = "llm_coder"
+name            = "llm-coder"
 version         = "0.1.0"
 description     = "llm による自立型 Cli コーディングエージェントライブラリ"
 readme          = "README.md"
@@ -12,7 +12,7 @@ license         = { text = "MIT" }
 authors         = [{ name = "Tomokatsu Iguchi" }]
 
 dependencies = [
-    "litellm",   # llm_coder が依存するライブラリを列挙
+    "litellm",   # llm-coder が依存するライブラリを列挙
     "toml",
     "structlog",
     # 他に必要な依存関係があればここに追加
@@ -23,12 +23,12 @@ dependencies = [
     llm-coder-litellm = "llm_coder.litellm_cli:run_litellm_cli"
 
     [project.urls]
-    "Homepage"    = "https://github.com/igtm/llm_coder"
-    "Bug Tracker" = "https://github.com/igtm/llm_coder/issues"
+    "Homepage"    = "https://github.com/igtm/llm-coder"
+    "Bug Tracker" = "https://github.com/igtm/llm-coder/issues"
 
 [dependency-groups]
 dev = ["pytest>=8.3.5", "pytest-asyncio>=0.26.0", "ruff>=0.11.9"]
 
 [tool.setuptools.packages.find]
-include = ["llm_coder*"]
+include = ["llm-coder*"]
 exclude = ["playground*"]

@@ -1,6 +1,6 @@
-# llm_coder
+# llm-coder
 
-llm による自立型 Cli コーディングエージェントライブラリ llm_coder
+llm による自立型 Cli コーディングエージェントライブラリ llm-coder
 
 ユーザーの指示通りコーディングし、自前の linter や formatter や test コードを評価フェーズに実行でき、通るまで修正します。
 llm api のインターフェースは litellm ライブラリを使用。Claude や OpenAI など自由な LLM を利用できます。
@@ -12,8 +12,8 @@ llm api のインターフェースは litellm ライブラリを使用。Claude
 1. リポジトリをクローンします:
 
    ```bash
-   git clone <repository_url>
-   cd llm_coder
+   git clone https://github.com/igtm/llm-coder.git
+   cd llm-coder
    ```
 
 2. 開発モードでパッケージをインストールします:
@@ -40,7 +40,7 @@ positional arguments:
 
 options:
   -h, --help            ヘルプメッセージを表示して終了
-  --config CONFIG       TOML設定ファイルのパス (デフォルト: llm_coder_config.toml)
+  --config CONFIG       TOML設定ファイルのパス (デフォルト: llm-coder-config.toml)
   --model MODEL, -m MODEL
                         使用するLLMモデル (デフォルト: gpt-4.1-nano)
   --temperature TEMPERATURE, -t TEMPERATURE
@@ -95,7 +95,7 @@ llm-coder --output result.txt --conversation-history conversation.txt "Create a 
 
 ### TOML 設定ファイルの例
 
-デフォルトでは `llm_coder_config.toml` という名前の設定ファイルが読み込まれます。カスタム設定ファイルは `--config` オプションで指定できます。
+デフォルトでは `llm-coder-config.toml` という名前の設定ファイルが読み込まれます。カスタム設定ファイルは `--config` オプションで指定できます。
 
 ```toml
 # グローバル設定
@@ -113,7 +113,7 @@ repository_description_prompt = "このリポジトリはPythonのユーティ�
 設定ファイルを使用する場合:
 
 ```sh
-# デフォルトの設定ファイル (llm_coder_config.toml) を使用
+# デフォルトの設定ファイル (llm-coder-config.toml) を使用
 llm-coder
 
 # カスタム設定ファイルを指定
@@ -124,19 +124,18 @@ llm-coder --config my_config.toml
 
 インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意していますが、スクリプトの実行はプロジェクトのルートディレクトリから行う必要があります。
 
-プロジェクトのルートディレクトリ (`llm_coder` ディレクトリのトップ) から以下のコマンドを実行してください:
+プロジェクトのルートディレクトリ (`llm-coder` ディレクトリのトップ) から以下のコマンドを実行してください:
 
 ```bash
 # プロジェクトのルートディレクトリにいることを確認
-# (例: /home/igtm/tmp/llm_coder)
-uv run python -m llm_coder.cli <引数...>
+uv run python -m llm-coder.cli <引数...>
 ```
 
 例:
 
 ```bash
 # プロジェクトのルートディレクトリにいることを想定
-uv run python -m llm_coder.cli "Create a python script that outputs 'hello world'"
+uv run python -m llm-coder.cli "Create a python script that outputs 'hello world'"
 ```
 
 ## llm-coder-litellm コマンドの使用方法

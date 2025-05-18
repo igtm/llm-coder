@@ -13,7 +13,7 @@ permissions:
   issues: write
 jobs:
   llm-coder:
-    if: contains(github.event.comment.body, '/llm-coder')
+    if: startsWith(github.event.comment.body, '/llm-coder') && github.event.comment.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,7 +22,7 @@ jobs:
           submodules: recursive
           # PRの場合はfeatureブランチを直接チェックアウト
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
-      - run: cp llm_coder_config.example.toml llm_coder_config.toml
+      - run: cp llm-coder-config.example.toml llm-coder-config.toml
       - name: Run LLM Coder Action
         uses: igtm/llm-coder-action@v1
         with:

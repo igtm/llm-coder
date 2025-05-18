@@ -13,13 +13,13 @@ from llm_coder.shell_command import (
 )  # get_shell_command_tools をインポート
 import structlog  # structlog をインポート (agent.py と同様の設定を想定)
 
-logger = structlog.get_logger("llm_coder.cli")
+logger = structlog.get_logger(__name__)
 
 
 def parse_args():
     # 設定ファイル専用のパーサーを作成して、--config 引数を先に解析
     config_parser = argparse.ArgumentParser(add_help=False)
-    default_config_filename = "llm_coder_config.toml"
+    default_config_filename = "llm-coder-config.toml"
     config_parser.add_argument(
         "--config",
         type=str,

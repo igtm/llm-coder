@@ -16,7 +16,7 @@ except ImportError:
 
 # structlog の設定は logging_config.py に移動
 # 実際の設定は cli.py で行われる
-logger = structlog.get_logger("llm_coder.agent")
+logger = structlog.get_logger(__name__)
 
 
 # デフォルトプロンプト定数

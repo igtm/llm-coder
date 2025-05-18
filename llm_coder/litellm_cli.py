@@ -5,7 +5,7 @@ import os
 import structlog
 import toml
 
-logger = structlog.get_logger("llm_coder.litellm_cli")
+logger = structlog.get_logger(__name__)
 
 try:
     import litellm
@@ -16,7 +16,7 @@ except ImportError:
 def load_config(config_path=None):
     """TOML設定ファイルを読み込む関数"""
     config_values = {}
-    default_config_filename = "llm_coder_config.toml"
+    default_config_filename = "llm-coder-config.toml"
     config_file_path_to_load = config_path or default_config_filename
 
     if os.path.exists(config_file_path_to_load):
@@ -35,8 +35,8 @@ def parse_litellm_args(argv, config_values=None):
     config_parser.add_argument(
         "--config",
         type=str,
-        default="llm_coder_config.toml",  # デフォルトファイル名を設定
-        help="TOML設定ファイルのパス (デフォルト: llm_coder_config.toml)",
+        default="llm-coder-config.toml",  # デフォルトファイル名を設定
+        help="TOML設定ファイルのパス (デフォルト: llm-coder-config.toml)",
     )
     config_args, remaining_argv = config_parser.parse_known_args(argv)
 
@@ -179,7 +179,7 @@ def run_litellm_cli():
     """llm-coder-litellm コマンドのエントリーポイント"""
     # 最初に --config オプションのみを解析
     config_parser = argparse.ArgumentParser(add_help=False)
-    config_parser.add_argument("--config", type=str, default="llm_coder_config.toml")
+    config_parser.add_argument("--config", type=str, default="llm-coder-config.toml")
     config_args, _ = config_parser.parse_known_args(sys.argv[1:])
 
     # 設定ファイルを読み込む

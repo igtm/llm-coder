@@ -6,6 +6,6 @@
 - python のコードはできる限り async で書いてください。
 
 # このレポジトリについて
-llm による自立型Cliコーディングエージェントライブラリ llm_coder
+llm による自立型Cliコーディングエージェントライブラリ llm-coder
 ユーザーの指示通りコーディングし、自前のlinterやformatterやtestコードを評価フェーズに実行でき、通るまで修正します。
 llm api のインターフェースは litellm ライブラリを使用。ClaudeやOpenAIなど自由なLLMを利用できます。
