@@ -1,152 +1,155 @@
 # llm-coder
 
-llm による自立型 Cli コーディングエージェントライブラリ llm-coder
+[日本語](./README.ja.md)
 
-ユーザーの指示通りコーディングし、自前の linter や formatter や test コードを評価フェーズに実行でき、通るまで修正します。
-llm api のインターフェースは litellm ライブラリを使用。Claude や OpenAI など自由な LLM を利用できます。
-モデルや API キーの設定方法は litellm のプロバイダ設定に準拠します。  
-詳細は https://docs.litellm.ai/docs/providers を参照してください。
+llm-coder is an autonomous CLI coding agent library powered by LLMs.
 
-## インストール方法
+It codes according to user instructions, runs its own linter, formatter, and test code in an evaluation phase, and keeps fixing until all checks pass.
+The LLM API interface uses the litellm library, allowing you to use any LLM such as Claude or OpenAI.
+Model and API key configuration follows the litellm provider settings.  
+See https://docs.litellm.ai/docs/providers for details.
 
-1. リポジトリをクローンします:
+## Installation
 
-   ```bash
-   git clone https://github.com/igtm/llm-coder.git
-   cd llm-coder
-   ```
-
-2. 開発モードでパッケージをインストールします:
-
-   ```bash
-   pip install -e .
-   ```
-
-   これにより、プロジェクトディレクトリ内で `llm-coder` コマンドが利用可能になります。
-
-## 使い方
-
-インストール後、以下のコマンドで CLI ツールを実行できます:
+You can install llm-coder via PyPI:
 
 ```bash
-llm-coder <プロンプト> [オプション...]
+pip install llm-coder
 ```
 
-## 利用可能なオプション
+Or, install from source:
+
+```bash
+git clone https://github.com/igtm/llm-coder.git
+cd llm-coder
+pip install -e .
+```
+
+This makes the `llm-coder` command available in your project directory.
+
+## Usage
+
+After installation, you can run the CLI tool with:
+
+```bash
+llm-coder <prompt> [options...]
+```
+
+## Available Options
 
 ```
 positional arguments:
-  prompt                実行するプロンプト (省略時は標準入力から。TOMLファイルでも指定可能)
+  prompt                Prompt to execute (if omitted, read from stdin or TOML file)
 
 options:
-  -h, --help            ヘルプメッセージを表示して終了
-  --config CONFIG       TOML設定ファイルのパス (デフォルト: llm-coder-config.toml)
+  -h, --help            Show help message and exit
+  --config CONFIG       Path to TOML config file (default: llm-coder-config.toml)
   --model MODEL, -m MODEL
-                        使用するLLMモデル (デフォルト: gpt-4.1-nano)
+                        LLM model to use (default: gpt-4.1-nano)
   --temperature TEMPERATURE, -t TEMPERATURE
-                        LLMの温度パラメータ (デフォルト: 0.5)
+                        LLM temperature parameter (default: 0.5)
   --max-iterations MAX_ITERATIONS, -i MAX_ITERATIONS
-                        最大実行イテレーション数 (デフォルト: 10)
+                        Maximum execution iterations (default: 10)
   --allowed-dirs ALLOWED_DIRS [ALLOWED_DIRS ...]
-                        ファイルシステム操作を許可するディレクトリ（スペース区切りで複数指定可） (デフォルト: ['.', 'playground'])
+                        Directories allowed for file system operations (space separated, default: ['.', 'playground'])
   --repository-description-prompt REPOSITORY_DESCRIPTION_PROMPT
-                        LLMに渡すリポジトリの説明プロンプト (デフォルト: TOMLファイルまたは空)
+                        Repository description prompt for LLM (default: from TOML file or empty)
   --output OUTPUT, -o OUTPUT
-                        実行結果を出力するファイルパス (デフォルト: なし、標準出力のみ)
+                        Output file path (default: none, stdout only)
   --conversation-history CONVERSATION_HISTORY, -ch CONVERSATION_HISTORY
-                        エージェントの会話履歴を出力するファイルパス (デフォルト: なし)
+                        Output file path for agent conversation history (default: none)
   --request-timeout REQUEST_TIMEOUT
-                        LLM APIリクエスト1回あたりのタイムアウト秒数 (デフォルト: 60)
+                        Timeout per LLM API request in seconds (default: 60)
 ```
 
-### 使用例
+### Examples
 
 ```sh
-# 基本的な使い方
+# Basic usage
 llm-coder "Create a python script that outputs 'hello world'"
 
-# モデルを指定
+# Specify model
 llm-coder --model claude-3-opus-20240229 "Create a python script that outputs 'hello world'"
 
-# 温度と最大イテレーション数を指定
+# Specify temperature and max iterations
 llm-coder --temperature 0.7 --max-iterations 5 "Create a python script that outputs 'hello world'"
 
-# 許可するディレクトリを指定
+# Specify allowed directories
 llm-coder --allowed-dirs . ./output ./src "Create a python script that outputs 'hello world'"
 
-# リクエストタイムアウトを指定
+# Specify request timeout
 llm-coder --request-timeout 120 "Create a python script that outputs 'hello world'"
 
-# 実行結果をファイルに出力
+# Output result to file
 llm-coder --output result.txt "Create a python script that outputs 'hello world'"
 
-# 会話履歴をファイルに出力
+# Output conversation history to file
 llm-coder --conversation-history conversation.txt "Create a python script that outputs 'hello world'"
 
-# 実行結果と会話履歴の両方をファイルに出力
+# Output both result and conversation history to files
 llm-coder --output result.txt --conversation-history conversation.txt "Create a python script that outputs 'hello world'"
 ```
 
-## 設定
+## Configuration
 
-設定はコマンドライン引数または TOML ファイルを通じて行うことができます。
+You can configure llm-coder via command line arguments or a TOML file.
 
-**設定の優先順位**: コマンドライン引数 > TOML 設定ファイル > ハードコードされたデフォルト値
+**Priority:** Command line arguments > TOML config file > hardcoded defaults
 
-### TOML 設定ファイルの例
+### Example TOML Config File
 
-デフォルトでは `llm-coder-config.toml` という名前の設定ファイルが読み込まれます。カスタム設定ファイルは `--config` オプションで指定できます。
+By default, `llm-coder-config.toml` is loaded. You can specify a custom config file with `--config`.
 
 ```toml
-# グローバル設定
+# Global settings
 model = "claude-3-opus-20240229"
 prompt = "Create a python script that outputs 'hello world'"
 temperature = 0.5
 max_iterations = 10
 request_timeout = 60
 allowed_dirs = ["."]
-repository_description_prompt = "このリポジトリはPythonのユーティリティツールです"
+repository_description_prompt = "This repository is a Python utility tool."
 # output = "result.txt"
 # conversation_history = "conversation.txt"
 ```
 
-設定ファイルを使用する場合:
+To use a config file:
 
 ```sh
-# デフォルトの設定ファイル (llm-coder-config.toml) を使用
+# Use default config file (llm-coder-config.toml)
 llm-coder
 
-# カスタム設定ファイルを指定
+# Specify custom config file
 llm-coder --config my_config.toml
 ```
 
-### 開発中の直接実行
+### Running Directly During Development
 
-インストールせずに開発中に `cli.py` を直接実行することも可能です。挙動を試す用の `playground` ディレクトリを用意していますが、スクリプトの実行はプロジェクトのルートディレクトリから行う必要があります。
+You can run `cli.py` directly during development without installing. A `playground` directory is provided for testing, but you must run scripts from the project root directory.
 
-プロジェクトのルートディレクトリ (`llm-coder` ディレクトリのトップ) から以下のコマンドを実行してください:
+From the project root (`llm-coder` top directory), run:
 
 ```bash
-# プロジェクトのルートディレクトリにいることを確認
-uv run python -m llm-coder.cli <引数...>
+# Make sure you are in the project root directory
+uv run python -m llm-coder.cli <args...>
 ```
 
-例:
+Example:
 
 ```bash
-# プロジェクトのルートディレクトリにいることを想定
+# Assuming you are in the project root directory
 uv run python -m llm-coder.cli "Create a python script that outputs 'hello world'"
 ```
 
-## llm-coder-litellm コマンドの使用方法
+## llm-coder-litellm Command
 
-`llm-coder-litellm` コマンドは LiteLLM ライブラリを直接使用して LLM の completion API を呼び出すためのシンプルなラッパーです。
+The `llm-coder-litellm` command is a simple wrapper for calling the LLM completion API directly using the LiteLLM library.
 
 ```bash
-llm-coder-litellm --model <モデル名> [オプション...] "プロンプト"
+llm-coder-litellm --model <model> [options...] "prompt"
 ```
 
-### 利用可能なオプション
+### Available Options
 
 ```text
 usage: llm-coder-litellm [-h] --model MODEL [--temperature TEMPERATURE] [--max_tokens MAX_TOKENS] [--top_p TOP_P] [--n N] [--stream] [--stop [STOP ...]]
@@ -154,45 +157,45 @@ usage: llm-coder-litellm [-h] --model MODEL [--temperature TEMPERATURE] [--max_t
                          [--seed SEED] [--timeout TIMEOUT] [--output OUTPUT] [--extra EXTRA]
                          [prompt]
 
-litellm completion API ラッパー
+litellm completion API wrapper
 
 positional arguments:
-  prompt                プロンプト（省略時は標準入力）
+  prompt                Prompt (if omitted, read from stdin)
 
 options:
   -h, --help            show this help message and exit
-  --model MODEL         モデル名
+  --model MODEL         Model name
   --temperature TEMPERATURE
-                        温度パラメータ (デフォルト: 0.2)
+                        Temperature parameter (default: 0.2)
   --max_tokens MAX_TOKENS
                         max_tokens
   --top_p TOP_P         top_p
   --n N                 n
-  --stream              ストリーム出力
-  --stop [STOP ...]     ストップ語
+  --stream              Stream output
+  --stop [STOP ...]     Stop words
   --presence_penalty PRESENCE_PENALTY
                         presence_penalty
   --frequency_penalty FREQUENCY_PENALTY
                         frequency_penalty
   --user USER           user
   --response_format RESPONSE_FORMAT
-                        response_format (json など)
+                        response_format (e.g. json)
   --seed SEED           seed
-  --timeout TIMEOUT     リクエストタイムアウト秒数 (デフォルト: 60)
+  --timeout TIMEOUT     Request timeout in seconds (default: 60)
   --output OUTPUT, -o OUTPUT
-                        出力ファイル
-  --extra EXTRA         追加のJSONパラメータ
+                        Output file
+  --extra EXTRA         Additional JSON parameters
 ```
 
-### 使用例
+### Examples
 
 ```bash
-# 基本的な使い方
+# Basic usage
 llm-coder-litellm --model gpt-4.1-nano "Generate a summary of the following text"
 
-# 温度を指定
+# Specify temperature
 llm-coder-litellm --model gpt-4.1-nano --temperature 0.7 "Generate a summary of the following text"
 
-# 出力をファイルに保存
+# Save output to file
 llm-coder-litellm --model gpt-4.1-nano --output summary.txt "Generate a summary of the following text"
 ```
