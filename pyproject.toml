@@ -27,7 +27,11 @@ dependencies = [
     "Bug Tracker" = "https://github.com/igtm/llm-coder/issues"
 
 [dependency-groups]
-dev = ["pytest>=8.3.5", "pytest-asyncio>=0.26.0", "ruff>=0.11.9"]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "ruff>=0.11.9",
+]
 
 [tool.setuptools.packages.find]
 include = ["llm_coder*"]

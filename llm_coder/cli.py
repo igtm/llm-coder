@@ -4,6 +4,7 @@ import argparse
 import os  # os モジュールをインポート
 import sys  # sys モジュールをインポート
 import toml  # toml をインポート
+from litellm import get_model_info  # get_model_info をインポート
 
 # agent と filesystem モジュールをインポート
 from llm_coder.agent import Agent
@@ -148,6 +149,15 @@ def parse_args():
         help=f"LLM APIリクエスト1回あたりのタイムアウト秒数 (デフォルト: {request_timeout_default})",
     )
 
+    # 最大入力トークン数のオプションを追加
+    max_input_tokens_default = config_values.get("max_input_tokens", None)
+    parser.add_argument(
+        "--max-input-tokens",
+        type=int,
+        default=max_input_tokens_default,
+        help="LLMの最大入力トークン数 (デフォルト: モデル固有の最大値)",
+    )
+
     # remaining_argv を使って、--config 以外の引数を解析
     return parser.parse_args(remaining_argv)
 
@@ -199,6 +209,14 @@ async def run_agent_from_cli(args):
     logger.debug("Total available tools", tool_count=len(all_available_tools))
 
     logger.debug("Initializing agent from CLI")
+
+    # 最大入力トークン数を決定
+    max_input_tokens = args.max_input_tokens
+    if max_input_tokens is None:
+        model_info = get_model_info(args.model)
+        if model_info and "max_input_tokens" in model_info:
+            max_input_tokens = model_info["max_input_tokens"]
+
     agent_instance = Agent(  # Agent クラスのインスタンス名変更
         model=args.model,
         temperature=args.temperature,
@@ -206,6 +224,7 @@ async def run_agent_from_cli(args):
         available_tools=all_available_tools,  # 更新されたツールリストを使用
         repository_description_prompt=args.repository_description_prompt,  # リポジトリ説明プロンプトを渡す
         request_timeout=args.request_timeout,  # LLM APIリクエストのタイムアウトを渡す
+        max_input_tokens=max_input_tokens,  # 最大入力トークン数を渡す
     )
 
     logger.info("Starting agent run from CLI", prompt_length=len(prompt))

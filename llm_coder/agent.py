@@ -86,6 +86,7 @@ class Agent:
         final_summary_prompt: str = FINAL_SUMMARY_PROMPT,  # 最終要約用プロンプト
         repository_description_prompt: str = None,  # リポジトリ説明プロンプト
         request_timeout: int = 180,  # 1回のリクエストに対するタイムアウト秒数（CLIから調整可能、デフォルト180）
+        max_input_tokens: int = None,  # LLMの最大入力トークン数
     ):
         self.model = model
         self.temperature = temperature
@@ -94,6 +95,7 @@ class Agent:
         self.final_summary_prompt = final_summary_prompt
         # repository_description_prompt が None または空文字列の場合はそのまま None または空文字列を保持
         self.repository_description_prompt = repository_description_prompt
+        self.max_input_tokens = max_input_tokens  # 最大生成トークン数を設定
 
         # 利用可能なツールを設定
         self.available_tools = available_tools or []
@@ -120,6 +122,86 @@ class Agent:
             if self.repository_description_prompt
             else 0,
         )
+
+    async def _get_messages_for_llm(self) -> List[Dict[str, Any]]:
+        """
+        LLMに渡すメッセージリストを作成する。トークン数制限を考慮する。
+
+        Returns:
+            LLMに渡すメッセージの辞書リスト。
+        """
+        if not self.conversation_history:
+            return []
+
+        messages_to_send = []
+        current_tokens = 0
+
+        # 1. 最初のシステムメッセージと最初のユーザープロンプトは必須
+        # 最初のシステムメッセージ
+        if self.conversation_history[0].role == "system":
+            system_message = self.conversation_history[0].to_dict()
+            messages_to_send.append(system_message)
+            if self.max_input_tokens is not None:
+                current_tokens += litellm.token_counter(
+                    model=self.model, messages=[system_message]
+                )
+
+        # 最初のユーザーメッセージ (システムメッセージの次にあると仮定)
+        if (
+            len(self.conversation_history) > 1
+            and self.conversation_history[1].role == "user"
+        ):
+            user_message = self.conversation_history[1].to_dict()
+            # 既にシステムメッセージが追加されているか確認
+            if not messages_to_send or messages_to_send[-1] != user_message:
+                # トークンチェック
+                if self.max_input_tokens is not None:
+                    user_message_tokens = litellm.token_counter(
+                        model=self.model, messages=[user_message]
+                    )
+                    if current_tokens + user_message_tokens <= self.max_input_tokens:
+                        messages_to_send.append(user_message)
+                        current_tokens += user_message_tokens
+                    else:
+                        raise ValueError(
+                            f"最初のユーザーメッセージがトークン制限を超えています。必要なトークン数: {user_message_tokens}, 現在のトークン数: {current_tokens}, 最大トークン数: {self.max_input_tokens}"
+                        )
+                else:
+                    messages_to_send.append(user_message)
+
+        # 2. 最新の会話履歴からトークン制限を超えない範囲で追加
+        # 必須メッセージ以降の履歴を取得 (必須メッセージが2つと仮定)
+        remaining_history = self.conversation_history[2:]
+
+        temp_recent_messages: list[Dict[str, Any]] = []
+        for msg in reversed(remaining_history):
+            msg_dict = msg.to_dict()
+            if self.max_input_tokens is not None:
+                msg_tokens = litellm.token_counter(
+                    model=self.model, messages=[msg_dict]
+                )
+                if current_tokens + msg_tokens <= self.max_input_tokens:
+                    temp_recent_messages.insert(0, msg_dict)  # 逆順なので先頭に追加
+                    current_tokens += msg_tokens
+                else:
+                    # トークン制限に達したらループを抜ける
+                    logger.debug(
+                        "トークン制限に達したため、これ以上過去のメッセージは含めません。",
+                        message_content=msg_dict.get("content", "")[:50],
+                        required_tokens=msg_tokens,
+                        current_tokens=current_tokens,
+                        max_tokens=self.max_input_tokens,
+                    )
+                    break
+            else:
+                temp_recent_messages.insert(0, msg_dict)
+
+        messages_to_send.extend(temp_recent_messages)
+
+        logger.debug(
+            f"LLMに渡すメッセージ数: {len(messages_to_send)}, トークン数: {current_tokens if self.max_input_tokens is not None else 'N/A'}"
+        )
+        return messages_to_send
 
     async def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> str:
         """指定されたツールを実行してその結果を返す"""
@@ -209,7 +291,9 @@ class Agent:
         try:
             response = await litellm.acompletion(
                 model=self.model,
-                messages=[msg.to_dict() for msg in self.conversation_history],
+                messages=[
+                    msg.to_dict() for msg in self.conversation_history
+                ],  # プランニングフェーズでは全履歴を使用することが多い
                 temperature=self.temperature,
                 tools=self.tools,  # 更新されたツールリストを使用
                 timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
@@ -287,7 +371,7 @@ class Agent:
 
                 response = await litellm.acompletion(
                     model=self.model,
-                    messages=[msg.to_dict() for msg in self.conversation_history],
+                    messages=await self._get_messages_for_llm(),  # 引数を削除
                     temperature=self.temperature,
                     tools=self.tools,  # 更新されたツールリストを使用
                     timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
@@ -390,7 +474,7 @@ class Agent:
             logger.debug("Getting next actions from LLM after tool executions")
             response = await litellm.acompletion(
                 model=self.model,
-                messages=[msg.to_dict() for msg in self.conversation_history],
+                messages=await self._get_messages_for_llm(),  # 引数を削除
                 temperature=self.temperature,
                 tools=self.tools,  # 更新されたツールリストを使用
                 timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
@@ -474,9 +558,9 @@ class Agent:
 
                 final_response = await litellm.acompletion(
                     model=self.model,
-                    messages=[msg.to_dict() for msg in self.conversation_history],
+                    messages=await self._get_messages_for_llm(),
                     temperature=self.temperature,
-                    tools=self.tools,  # ツールパラメータを追加
+                    tools=self.tools,  # 使わないけど、ツールリストを提供して、Anthropicの要件を満たす
                     timeout=self.request_timeout,  # 1回のリクエスト用タイムアウト
                 )
                 logger.debug(
