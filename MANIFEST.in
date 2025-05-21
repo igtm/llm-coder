@@ -1,0 +1,5 @@
+# sdist に必要なファイルを含めるための設定
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include llm_coder *.py
