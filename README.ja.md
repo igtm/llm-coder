@@ -206,3 +206,7 @@ llm-coder-litellm --model gpt-4.1-nano --temperature 0.7 "Generate a summary of 
 # 出力をファイルに保存
 llm-coder-litellm --model gpt-4.1-nano --output summary.txt "Generate a summary of the following text"
 ```
+
+## GitHub Actions との連携
+
+便利な GitHub Actions composite [llm-coder-action](https://github.com/igtm/llm-coder-action) を使って、GitHub ワークフローで簡単に llm-coder を利用できます。

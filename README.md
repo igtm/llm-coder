@@ -199,3 +199,7 @@ llm-coder-litellm --model gpt-4.1-nano --temperature 0.7 "Generate a summary of 
 # Save output to file
 llm-coder-litellm --model gpt-4.1-nano --output summary.txt "Generate a summary of the following text"
 ```
+
+## GitHub Actions Integration
+
+You can easily use llm-coder in your GitHub workflows with [llm-coder-action](https://github.com/igtm/llm-coder-action), a convenient GitHub Actions composite.
