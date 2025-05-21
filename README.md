@@ -11,20 +11,21 @@ See https://docs.litellm.ai/docs/providers for details.
 
 ## Installation
 
-1. Clone the repository:
+You can install llm-coder via PyPI:
 
-   ```bash
-   git clone https://github.com/igtm/llm-coder.git
-   cd llm-coder
-   ```
+```bash
+pip install llm-coder
+```
 
-2. Install the package in development mode:
+Or, install from source:
 
-   ```bash
-   pip install -e .
-   ```
+```bash
+git clone https://github.com/igtm/llm-coder.git
+cd llm-coder
+pip install -e .
+```
 
-   This makes the `llm-coder` command available in your project directory.
+This makes the `llm-coder` command available in your project directory.
 
 ## Usage
 

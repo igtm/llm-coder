@@ -11,6 +11,14 @@ llm api のインターフェースは litellm ライブラリを使用。Claude
 
 ## インストール方法
 
+### PyPI からインストール
+
+```bash
+pip install llm-coder
+```
+
+### ソースからインストール
+
 1. リポジトリをクローンします:
 
    ```bash
